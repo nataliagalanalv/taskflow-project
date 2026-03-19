@@ -1,0 +1,145 @@
+:root {
+  /* Colors */
+  --color-primary: #F2EC91;
+  --color-primary-dark: #c0b849;
+  --color-secondary:#AB63F2;
+  --color-accent: #05DBF2;
+  --color-completed:#07F285;
+  --color-pending: #F26DCF;
+  --color-text: #000000;
+  --color-text-secondary:#232323;
+  --color-border: #949494;
+  --color-white: #ffffff;
+
+  /* Font */
+  --font-main: 'Inter', Arial, sans-serif;
+  --font-size-base: 16px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h1, h2, h3 {
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  font-size: var(--font-size-base);
+  background-color: var(--color-white);
+  color: var(--color-text);
+}
+
+.header {
+  background-color: var(--color-white);
+  color: var(--color-secondary);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-box input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.main {
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+}
+
+.sidebar {
+  width: 250px;     
+  min-width: 250px;
+  background: var(--color-border);
+  color: var(--color-white);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.profile {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile img {
+  border-radius: 50%;
+  margin: 10px 0;
+}
+
+.logo {
+  background: var(--color-secondary);
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.stadistics {
+  background: #d1d5db;
+  color: black;
+  border-radius: 20px;
+  padding: 15px;
+}
+
+
+.content {
+  flex: 1;
+  min-width: 0;  
+}
+
+.filters {
+  margin: 10px 0;
+  display: flex;
+  gap: 15px;
+}
+
+.task-container {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.actions button {
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+#new-task-form{
+    transition: all 0.3s ease;
+}
+
+
+

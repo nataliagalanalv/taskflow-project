@@ -1,0 +1,15 @@
+<script>
+const newTaskButton = document.getElementById('new-task-button');
+const newTaskForm = document.getElementById('new-task-form');
+
+newTaskButton.addEventListener('click', () => {
+    // Alterna mostrar/ocultar el formulario
+    if (newTaskForm.style.display === 'none' || newTaskForm.style.display === '') {
+        newTaskForm.style.display = 'block';
+        newTaskButton.textContent = 'Cancelar';
+    } else {
+        newTaskForm.style.display = 'none';
+        newTaskButton.textContent = 'Nueva tarea';
+    }
+});
+</script>

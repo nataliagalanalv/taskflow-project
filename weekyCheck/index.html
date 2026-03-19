@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WeekyCheck</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Hola, <span>Usuario</span></h1>
+
+    <div class="search-box">
+        <input type="text" placeholder="Buscar tareas">
+    </div>
+</header>
+
+<div class="main">
+
+    <aside class="sidebar">
+
+        <div class="profile">
+            <h2 class="logo">WeekyCheck</h2>
+            <img src="" alt="avatar">
+            <p>Usuario</p>
+        </div>
+
+        <div class="stadistics">
+            <h3>Estadísticas</h3>
+            <p>Total: <span id="total">0</span></p>
+            <p>Pendientes: <span id="pending">0</span></p>
+            <p>Completadas: <span id="completed">0</span></p>
+        </div>
+    </aside>
+
+    <main class="content">
+        <h2>Listado de Tareas</h2>
+
+        <div class="filters">
+            <label><input type="checkbox">Todas</label>
+            <label><input type="checkbox">Pendientes</label>
+            <label><input type="checkbox">Completadas</label>    
+        </div>
+
+        <div class="task-container">
+            <p>Histórico de tareas</p>
+
+        </div>
+    
+        <div class="actions">
+            <button>Eliminar tarea</button>
+            <button>Tarea completada</button>
+            <button id="new-task-form">Nueva tarea</button>
+
+            <form id="new-task-form" style="display: none;">
+                <label for="task">Nueva tarea:</label>
+                <input type="text" id="task" name="task" required>
+                <button type="submit">Agregar</button>
+            </form>
+        </div>
+    </main>
+
+    
+</div>
+
+<footer>
+    <p>2026 WeekyCheck</p>
+</footer>
+
+<template id="template-tarea">
+        <li>
+            <input type="checkbox" class="completada">
+            <span class="task-description">Tarea de ejemplo</span>
+            <button class="delete">Eliminar</button>
+        </li>
+    </template>
+
+
+
+</body>
+</html>
