@@ -2,8 +2,10 @@
 const form = document.getElementById('new-task-form');
 const input = document.getElementById('task');
 const taskList = document.getElementById('task-list');
-const template = document.getElementById('template-tarea');
+const template = document.getElementById('template-task');
 const btnMarkCompleted = document.getElementById('mark-completed');
+const btnNewTask = document.getElementById('btn-new-task');
+const btnDeleteTask = document.getElementById('delete-task');
 
 const totalSpan = document.getElementById('total');
 const pendingSpan = document.getElementById('pending');
@@ -31,16 +33,15 @@ const updateStats = () => {
 const renderTask = (task) => {
     const clone = template.content.cloneNode(true);
     const li = clone.querySelector('li');
-    const checkbox = li.querySelector('.completada');
+    const checkbox = li.querySelector('.select');
     const span = li.querySelector('.task-description');
     const dateElem = li.querySelector('.task-date');
-    const deleteBtn = li.querySelector('.delete');
 
     span.textContent = task.title;
     dateElem.textContent = new Date(task.createdAt).toLocaleString();
     checkbox.checked = task.completed;
 
-// fun check completed tasks
+// fun select tasks TODO ---------------------------
     checkbox.addEventListener('change', () => {
         task.completed = checkbox.checked;
         saveTasks();
@@ -48,9 +49,10 @@ const renderTask = (task) => {
     });
 
 // fun delete task
-    deleteBtn.addEventListener('click', () => {
+    btnDeleteTask.addEventListener('click', () => {
+        tasks = task.filter(task => task.id !== li.dataset.id);
         li.remove();
-        tasks = tasks.filter(t => t.id !== task.id);
+        renderAllTasks();
         saveTasks();
         updateStats();
     });
@@ -65,14 +67,16 @@ const renderAllTasks = () => {
     updateStats();
 };
 
-// fun create new task
-const createTask = (title) => ({
-    id: Date.now(),
-    title: title,
-    completed: false,
-    createdAt: new Date().toISOString()
+// fun init btn new task listener
+btnNewTask.addEventListener('click', () => {
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        btnNewTask.textContent = 'Cancelar';
+    } else {
+        form.style.display = 'none';
+        btnNewTask.textContent = 'Nueva tarea';
+    }
 });
-
 
 // Cargar tareas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
@@ -83,13 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Añadir nueva tarea
+// fun create new task
 form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const title = input.value.trim();
-    if (!title) return;
+    const text = input.value.trim();
+    if (!text) return;
 
-    const task = createTask(title);
+    const task = {
+        id: Date.now(),
+        title: text,
+        completed: false,
+        createdAt: new Date().toISOString()
+    };
+
     tasks.push(task);
     saveTasks();
     renderTask(task);

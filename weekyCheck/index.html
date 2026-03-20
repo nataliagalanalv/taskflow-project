@@ -11,8 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 
-<script src="js/app.js"></script>
-
 <body>
 
 <div class="main">
@@ -58,9 +56,9 @@
         </div>
     
         <div class="actions">
-            <button>Eliminar tarea</button>
+            <button id="delete-task">Eliminar tarea</button>
             <button id="mark-completed">Tarea completada</button>
-            <button id="new-task-form">Nueva tarea</button>
+            <button id="btn-new-task">Nueva tarea</button>
 
             <form id="new-task-form" style="display: none;">
                 <label for="task">Nueva tarea:</label>
@@ -78,15 +76,14 @@
 </footer>
 
     <template id="template-task">
-        <li>
-            <input type="checkbox" class="completed">
-            <span class="task-description">Tarea de ejemplo</span>
+        <li class="task-item">
+            <input type="checkbox" class="select">
+            <span class="task-description"></span>
             <small class="task-date"></small>
-            <button class="delete">Eliminar</button>
         </li>
     </template>
 
-
+    <script src="js/app.js"></script>
 
 </body>
 </html>
