@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 
+<script src="js/app.js"></script>
+
 <body>
 
 <div class="main">
@@ -51,17 +53,18 @@
 
         <div class="task-container">
             <p>Histórico de tareas</p>
+            <ul id="task-list"></ul>
 
         </div>
     
         <div class="actions">
             <button>Eliminar tarea</button>
-            <button>Tarea completada</button>
+            <button id="mark-completed">Tarea completada</button>
             <button id="new-task-form">Nueva tarea</button>
 
             <form id="new-task-form" style="display: none;">
                 <label for="task">Nueva tarea:</label>
-                <input type="text" id="task" name="task" required>
+                <input type="text" id="task" name="Escribe tu tarea" required>
                 <button type="submit">Agregar</button>
             </form>
         </div>
@@ -74,10 +77,11 @@
     <p>2026 WeekyCheck</p>
 </footer>
 
-<template id="template-tarea">
+    <template id="template-task">
         <li>
-            <input type="checkbox" class="completada">
+            <input type="checkbox" class="completed">
             <span class="task-description">Tarea de ejemplo</span>
+            <small class="task-date"></small>
             <button class="delete">Eliminar</button>
         </li>
     </template>
