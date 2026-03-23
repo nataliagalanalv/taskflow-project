@@ -44,21 +44,20 @@
         <h2>Listado de Tareas</h2>
 
         <div class="filters">
-            <label><input type="checkbox">Todas</label>
-            <label><input type="checkbox">Pendientes</label>
-            <label><input type="checkbox">Completadas</label>    
+            <button class="filter-btn" data-filter="all">Todas</button>
+            <button class="filter-btn" data-filter="pending">Pendientes</button>
+            <button class="filter-btn" data-filter="completed">Completadas</button> 
         </div>
 
         <div class="task-container">
-            <p>Histórico de tareas</p>
             <ul id="task-list"></ul>
 
         </div>
     
         <div class="actions">
-            <button id="delete-task">Eliminar tarea</button>
-            <button id="mark-completed">Tarea completada</button>
-            <button id="btn-new-task">Nueva tarea</button>
+
+            <button id="mark-completed">Completada</button>
+            <button id="btn-new-task">Nueva Tarea</button>
 
             <form id="new-task-form" style="display: none;">
                 <label for="task">Nueva tarea:</label>
@@ -80,6 +79,7 @@
             <input type="checkbox" class="select">
             <span class="task-description"></span>
             <small class="task-date"></small>
+            <small class="status"></small>
         </li>
     </template>
 
