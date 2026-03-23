@@ -1,89 +1,97 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="bg-white text-black dark:bg-gray-900 dark:text-gray-100">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeekyCheck</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="font-sans">
 
-<div class="main">
+    <div class="flex min-h-screen">
 
-    <aside class="sidebar">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-100 dark:bg-gray-800 p-6 flex flex-col justify-between">
+            <div>
+                <div class="profile mb-6 text-center">
+                    <h2 class="text-2xl font-bold mb-2">WeekyCheck</h2>
+                    <div class="rounded-full w-16 h-16 mb-2 bg-gray-300 inline-block"></div>
+                    <p class="font-medium">Usuario</p>
+                </div>
 
-        <div class="profile">
-            <h2 class="logo">WeekyCheck</h2>
-            <img src="" alt="avatar">
-            <p>Usuario</p>
-        </div>
+                <div class="settings mb-6">
+                    <h3 class="font-semibold mb-2">Configuración</h3>
+                    <button id="mark-all-completed" class="w-full mb-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Marcar todas completadas</button>
+                    <button id="delete-all-completed" class="w-full px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Eliminar completadas</button>
+                </div>
 
-        <div class="stadistics">
-            <h3>Estadísticas</h3>
-            <p>Total: <span id="total">0</span></p>
-            <p>Pendientes: <span id="pending">0</span></p>
-            <p>Completadas: <span id="completed">0</span></p>
-        </div>
-    </aside>
-
-    <main class="content">
-
-        <header class="header">
-            <h1>Hola, <span>Usuario</span></h1>
-            <div class="search-box">
-                <input type="text" placeholder="Buscar tareas">
+                <div class="statistics">
+                    <h3 class="font-semibold mb-2">Estadísticas</h3>
+                    <p>Total: <span id="total">0</span></p>
+                    <p>Pendientes: <span id="pending">0</span></p>
+                    <p>Completadas: <span id="completed">0</span></p>
+                </div>
             </div>
-        </header>
+        </aside>
 
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <header class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Hola, <span>Usuario</span></h1>
+                <button id="toggle-dark" class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800">Modo oscuro</button>
+            </header>
 
-        <h2>Listado de Tareas</h2>
+            <!-- Acciones superiores -->
+            <div class="flex gap-2 mb-4 flex-wrap">
+                <button id="btn-new-task" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Nueva Tarea</button>
+                <button id="mark-completed" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Completada</button>
+            </div>
 
-        <div class="filters">
-            <button class="filter-btn" data-filter="all">Todas</button>
-            <button class="filter-btn" data-filter="pending">Pendientes</button>
-            <button class="filter-btn" data-filter="completed">Completadas</button> 
-        </div>
+            <!-- Formulario nueva tarea -->
+            <div id="form-container" class="mb-4 hidden">
+                <form id="new-task-form" class="flex gap-2">
+                    <input type="text" id="task" placeholder="Escribe tu tarea" class="flex-1 p-2 border rounded">
+                    <button type="submit" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Agregar</button>
+                </form>
+            </div>
 
-        <div class="task-container">
-            <ul id="task-list"></ul>
+            <!-- Filtros y búsqueda -->
+            <div class="flex flex-wrap gap-2 mb-4 items-center">
+                <button class="filter-btn px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" data-filter="all">Todas</button>
+                <button class="filter-btn px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" data-filter="pending">Pendientes</button>
+                <button class="filter-btn px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" data-filter="completed">Completadas</button>
+                <input id="search-task" type="text" placeholder="Buscar tarea" class="flex-1 p-2 border rounded">
+            </div>
 
-        </div>
-    
-        <div class="actions">
+            <!-- Lista de tareas -->
+            <ul id="task-list" class="space-y-2"></ul>
+        </main>
 
-            <button id="mark-completed">Completada</button>
-            <button id="btn-new-task">Nueva Tarea</button>
+    </div>
 
-            <form id="new-task-form" style="display: none;">
-                <label for="task">Nueva tarea:</label>
-                <input type="text" id="task" name="Escribe tu tarea" required>
-                <button type="submit">Agregar</button>
-            </form>
-        </div>
-    </main>
+    <footer class="text-center p-4 bg-gray-100 dark:bg-gray-800">
+        <p>2026 WeekyCheck</p>
+    </footer>
 
-    
-</div>
-
-<footer>
-    <p>2026 WeekyCheck</p>
-</footer>
-
+    <!-- Plantilla tarea -->
     <template id="template-task">
-        <li class="task-item">
-            <input type="checkbox" class="select">
-            <span class="task-description"></span>
-            <small class="task-date"></small>
-            <small class="status"></small>
+        <li class="flex items-center justify-between p-2 border rounded">
+            <div class="flex items-center gap-2">
+                <input type="checkbox" class="select">
+                <span class="task-description"></span>
+            </div>
+            <div class="flex gap-2">
+                <button class="edit-task-btn bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600">Editar</button>
+                <button class="delete-task-btn bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Eliminar</button>
+            </div>
         </li>
     </template>
 
     <script src="js/app.js"></script>
-
 </body>
+
 </html>

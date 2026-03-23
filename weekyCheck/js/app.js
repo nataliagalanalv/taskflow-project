@@ -1,40 +1,29 @@
-// Init Listeners
-const form = document.getElementById('new-task-form');
-const input = document.getElementById('task');
+// ====== Variables ======
 const taskList = document.getElementById('task-list');
 const template = document.getElementById('template-task');
-const btnMarkCompleted = document.getElementById('mark-completed');
 const btnNewTask = document.getElementById('btn-new-task');
+const btnMarkCompleted = document.getElementById('mark-completed');
+const btnMarkAllCompleted = document.getElementById('mark-all-completed');
+const btnDeleteAllCompleted = document.getElementById('delete-all-completed');
+const form = document.getElementById('form-container');
+const input = document.getElementById('task');
+const searchInput = document.getElementById('search-task');
 
 const totalSpan = document.getElementById('total');
 const pendingSpan = document.getElementById('pending');
 const completedSpan = document.getElementById('completed');
 
 let tasks = [];
+let currentFilter = 'all';
 
-// fun save tasks in LocalStorage
+// ====== LocalStorage ======
 const saveTasks = () => localStorage.setItem('tasks', JSON.stringify(tasks));
-
-// load tasks
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTasks = localStorage.getItem('tasks');
-    if (savedTasks) {
-        tasks = JSON.parse(savedTasks);
-        renderAllTasks();
-        updateStats();
-    }
-});
-
-// render all tasks (useful when loading)
-const renderAllTasks = () => {
-    taskList.innerHTML = "";
-    tasks.forEach(task => {
-        managerTask(task);
-    });
-    updateStats(); 
+const loadTasks = () => {
+    const saved = localStorage.getItem('tasks');
+    if (saved) tasks = JSON.parse(saved);
 };
 
-// fun update statistics
+// ====== Estadísticas ======
 const updateStats = () => {
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
@@ -45,104 +34,126 @@ const updateStats = () => {
     completedSpan.textContent = completed;
 };
 
-// fun manager tasks rendering with checkboxes and delete buttons
+// ====== Renderizar tarea ======
 const managerTask = (task) => {
     const clone = template.content.cloneNode(true);
     const li = clone.querySelector('li');
-
     li.dataset.id = task.id;
 
-    li.querySelector('.task-description').textContent = task.title;
-    li.querySelector('.task-date').textContent = new Date(task.createdAt).toLocaleString();
-    li.querySelector('.status').textContent = task.completed ? "completed" : "pending";
+    const titleSpan = li.querySelector('.task-description');
+    titleSpan.textContent = task.title;
 
+    // Aplicar estilo difuminado si está completada
+    li.classList.toggle('opacity-60', task.completed);
+    li.classList.toggle('line-through', task.completed);
 
     const checkbox = li.querySelector('.select');
+    checkbox.checked = task.completed;
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = "Eliminar";
-    deleteBtn.classList.add('delete-task-btn');
-    li.appendChild(deleteBtn);
+    // Editar tarea
+    li.querySelector('.edit-task-btn').addEventListener('click', () => {
+        const newTitle = prompt('Editar tarea:', task.title);
+        if (newTitle && newTitle.trim() !== '') {
+            task.title = newTitle.trim();
+            renderAllTasks();
+            saveTasks();
+        }
+    });
 
-    deleteBtn.addEventListener('click', () => {
+    // Eliminar tarea
+    li.querySelector('.delete-task-btn').addEventListener('click', () => {
         tasks = tasks.filter(t => t.id !== task.id);
-        li.remove();
-        updateStats();
+        renderAllTasks();
         saveTasks();
     });
 
     taskList.appendChild(li);
 };
 
-btnMarkCompleted.addEventListener('click', () => {
-    const selectedCheckboxes = document.querySelectorAll('.select:checked');
+// ====== Renderizar todas las tareas ======
+const renderAllTasks = () => {
+    taskList.innerHTML = '';
 
-    const ids = Array.from(selectedCheckboxes).map(cb =>
-        cb.closest('li').dataset.id
-    );
+    let filteredTasks = tasks;
 
-    tasks.forEach(task => { // mark as completed if id matches
-        if (ids.includes(task.id.toString())) {
-            task.completed = true;
-        }
-    });
+    // Aplicar filtro
+    if (currentFilter === 'pending') filteredTasks = tasks.filter(t => !t.completed);
+    if (currentFilter === 'completed') filteredTasks = tasks.filter(t => t.completed);
 
-    renderAllTasks();  
+    // Aplicar búsqueda
+    const searchText = searchInput.value.toLowerCase();
+    if (searchText) filteredTasks = filteredTasks.filter(t => t.title.toLowerCase().includes(searchText));
+
+    filteredTasks.forEach(task => managerTask(task));
     updateStats();
-    saveTasks();
-});
-
-
-const addNewTask = () => {
-    form.style.display = form.style.display === 'block' ? 'none' : 'block';
 };
 
-// fun new task form submission
+// ====== Listeners ======
+
+// Mostrar/ocultar formulario
+btnNewTask.addEventListener('click', () => {
+    form.classList.toggle('hidden'); // alterna la visibilidad
+});
+
+// Agregar nueva tarea
 form.addEventListener('submit', (e) => {
     e.preventDefault();
-
     const text = input.value.trim();
     if (!text) return;
 
-    const task = {
+    tasks.push({
         id: Date.now(),
         title: text,
         completed: false,
         createdAt: new Date().toISOString()
-    };
+    });
 
-    tasks.push(task);
-
-    renderAllTasks();
-    updateStats();
-    saveTasks();
-
-    input.value = "";
+    input.value = '';
     form.style.display = 'none';
+    renderAllTasks();
+    saveTasks();
 });
 
-btnNewTask.addEventListener('click', addNewTask);
+// Botón marcar seleccionadas completadas
+btnMarkCompleted.addEventListener('click', () => {
+    const selectedCheckboxes = document.querySelectorAll('.select:checked');
+    const ids = Array.from(selectedCheckboxes).map(cb => cb.closest('li').dataset.id);
 
-// fun filter tasks
-const filterButtons = document.querySelectorAll('.filter-btn');
-let currentFilter = 'all';
+    tasks.forEach(t => {
+        if (ids.includes(t.id.toString())) t.completed = true;
+    });
 
-filterButtons.forEach(btn => {
+    renderAllTasks();
+    saveTasks();
+});
+
+// Botón marcar todas completadas
+btnMarkAllCompleted.addEventListener('click', () => {
+    tasks.forEach(t => t.completed = true);
+    renderAllTasks();
+    saveTasks();
+});
+
+// Botón eliminar todas completadas
+btnDeleteAllCompleted.addEventListener('click', () => {
+    tasks = tasks.filter(t => !t.completed);
+    renderAllTasks();
+    saveTasks();
+});
+
+// Filtros
+document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        currentFilter = btn.dataset.filter; // 'all', 'pending' o 'completed'
-        applyFilter();
+        currentFilter = btn.dataset.filter;
+        renderAllTasks();
     });
 });
 
-const applyFilter = () => {
-    taskList.innerHTML = '';
-    let filteredTasks = tasks;
+// Búsqueda
+searchInput.addEventListener('input', () => renderAllTasks());
 
-    if (currentFilter === 'pending') {
-        filteredTasks = tasks.filter(t => !t.completed);
-    } else if (currentFilter === 'completed') {
-        filteredTasks = tasks.filter(t => t.completed);
-    }
-    filteredTasks.forEach(task => managerTask(task));
-    updateStats();
-};
+// ====== Inicializar ======
+document.addEventListener('DOMContentLoaded', () => {
+    loadTasks();
+    renderAllTasks();
+});
