@@ -23,7 +23,7 @@ const loadTasks = () => {
     if (saved) tasks = JSON.parse(saved);
 };
 
-// ====== Estadísticas ======
+// ====== Statistics ======
 const updateStats = () => {
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
