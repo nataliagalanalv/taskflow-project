@@ -34,7 +34,11 @@ const PRIORITY_CLASS_BY_VALUE = {
 const FILTER_ACTIVE_CLASSES = ['bg-purple-600', 'dark:bg-fuchsia-600', 'text-white', 'shadow-md'];
 const FILTER_INACTIVE_CLASSES = ['text-slate-600', 'dark:text-slate-400'];
 
-// ====== Statistics ======
+/**
+ * Updates the statistics display showing total, pending, and completed tasks
+ * @async
+ * @returns {void}
+ */
 const updateStats = () => {
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
@@ -54,13 +58,22 @@ const updateStats = () => {
     }
 };
 
-// ====== Task management buttons ======
+/**
+ * Deletes a task by its ID from the tasks array
+ * @param {number} id - The unique identifier of the task to delete
+ * @returns {void}
+ */
 const deleteTask = (id) => {
     tasks = tasks.filter(t => t.id !== id);
     saveTasks(tasks);
     renderAllTasks();
 };
 
+/**
+ * Toggles the completion status of a task
+ * @param {number} id - The unique identifier of the task to toggle
+ * @returns {void}
+ */
 const toggleTask = (id) => {
     const task = tasks.find(t => t.id === id);
     if (task) task.completed = !task.completed;
@@ -68,6 +81,11 @@ const toggleTask = (id) => {
     renderAllTasks();
 };
 
+/**
+ * Edits the title of an existing task
+ * @param {number} id - The unique identifier of the task to edit
+ * @returns {void}
+ */
 const editTask = (id) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
@@ -79,7 +97,10 @@ const editTask = (id) => {
     }
 };
 
-// ====== Render all tasks ======
+/**
+ * Filters tasks based on current filter settings, search text, priority, and type
+ * @returns {Array} Array of filtered task objects
+ */
 const getFilteredTasks = () => {
     const searchText = (searchInput?.value || "").toLowerCase();
     const valPriority = filterPriority.value;
@@ -101,6 +122,16 @@ const getFilteredTasks = () => {
     });
 };
 
+/**
+ * Renders a single task item by cloning the template and setting its content
+ * @param {Object} task - The task object to render
+ * @param {number} task.id - Unique identifier of the task
+ * @param {string} task.title - Title of the task
+ * @param {string} task.priority - Priority level (alta, media, baja)
+ * @param {string} task.type - Type of task (personal, work, etc.)
+ * @param {boolean} task.completed - Completion status
+ * @returns {DocumentFragment} Cloned template with task data
+ */
 const renderTaskItem = (task) => {
     const clone = taskTemplate.content.cloneNode(true);
     const li = clone.querySelector('li');
@@ -131,6 +162,10 @@ const renderTaskItem = (task) => {
     return clone;
 };
 
+/**
+ * Renders all filtered tasks in the task list and updates statistics
+ * @returns {void}
+ */
 function renderAllTasks() {
     taskList.innerHTML = '';
 
@@ -143,6 +178,11 @@ function renderAllTasks() {
 
 }
 
+/**
+ * Handles click events on task list items for edit, delete, and complete actions
+ * @param {Event} event - The click event object
+ * @returns {void}
+ */
 const handleTaskListClick = (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -169,6 +209,11 @@ const handleTaskListClick = (event) => {
     }
 };
 
+/**
+ * Handles form submission for creating new tasks
+ * @param {Event} e - The form submit event
+ * @returns {void}
+ */
 const handleNewTaskSubmit = (e) => {
     e.preventDefault();
 
@@ -196,18 +241,32 @@ const handleNewTaskSubmit = (e) => {
     saveTasks(tasks);
 };
 
+/**
+ * Marks all tasks as completed
+ * @returns {void}
+ */
 const handleMarkAllCompleted = () => {
     tasks.forEach(taskItem => taskItem.completed = true);
     renderAllTasks();
     saveTasks(tasks);
 };
 
+/**
+ * Deletes all completed tasks from the tasks array
+ * @returns {void}
+ */
 const handleDeleteAllCompleted = () => {
     tasks = tasks.filter(taskItem => !taskItem.completed);
     renderAllTasks();
     saveTasks(tasks);
 };
 
+/**
+ * Sets the visual active state of a filter button
+ * @param {HTMLElement} filterButton - The button element to update
+ * @param {boolean} isActive - Whether the button should be in active state
+ * @returns {void}
+ */
 const setFilterButtonActiveState = (filterButton, isActive) => {
     filterButton.classList.remove(...FILTER_ACTIVE_CLASSES, ...FILTER_INACTIVE_CLASSES);
     if (isActive) {
@@ -220,22 +279,45 @@ const setFilterButtonActiveState = (filterButton, isActive) => {
     filterButton.setAttribute('aria-selected', isActive ? 'true' : 'false');
 };
 
+/**
+ * Synchronizes all filter buttons to reflect the current filter state
+ * @returns {void}
+ */
 const syncFilterButtonsUI = () => {
     buttons.forEach(filterButton => {
         setFilterButtonActiveState(filterButton, filterButton.dataset.filter === currentFilter);
     });
 };
 
+/**
+ * Handles click events on filter buttons to change the current filter
+ * @param {HTMLElement} filterButton - The clicked filter button
+ * @returns {void}
+ */
 const handleFilterButtonClick = (filterButton) => {
     currentFilter = filterButton.dataset.filter;
     syncFilterButtonsUI();
     renderAllTasks(); 
 };
 
+/**
+ * Handles search input changes and triggers task re-rendering
+ * @returns {void}
+ */
 const handleSearchInput = () => renderAllTasks();
 
+
+/**
+ * Handles filter dropdown changes and triggers task re-rendering
+ * @returns {void}
+ */
 const handleFilterChange = () => renderAllTasks();
 
+
+/**
+ * Toggles the application between light and dark themes
+ * @returns {void}
+ */
 const toggleDarkMode = () => {
     htmlElement.classList.toggle('dark');
     const isDark = htmlElement.classList.contains('dark');
@@ -246,6 +328,10 @@ const toggleDarkMode = () => {
     renderAllTasks(); 
 };
 
+/**
+ * Applies the previously saved theme preference to the application
+ * @returns {void}
+ */
 const applySavedTheme = () => {
     if (loadTheme() === 'dark') {
         htmlElement.classList.add('dark');
@@ -253,6 +339,10 @@ const applySavedTheme = () => {
     }
 };
 
+/**
+ * Binds all UI event listeners to their respective handlers
+ * @returns {void}
+ */
 const bindUIEvents = () => {
     taskList.addEventListener('click', handleTaskListClick);
     newTaskForm.addEventListener('submit', handleNewTaskSubmit);
@@ -270,6 +360,10 @@ const bindUIEvents = () => {
     });
 };
 
+/**
+ * Initializes the application by loading theme, binding events, and rendering tasks
+ * @returns {void}
+ */
 const init = () => {
     applySavedTheme();
     tasks = loadTasks();
