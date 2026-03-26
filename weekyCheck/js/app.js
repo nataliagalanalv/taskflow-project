@@ -18,9 +18,21 @@ const totalSpan = document.getElementById('total');
 const pendingSpan = document.getElementById('pending');
 const completedSpan = document.getElementById('completed');
 const percentageLabel = document.getElementById('percentage-label');
+const btnToggleDark = document.getElementById('toggle-dark');
+const htmlElement = document.documentElement;
+const buttons = document.querySelectorAll('.filter-btn');
 
 let tasks = [];
 let currentFilter = 'all';
+
+const PRIORITY_CLASS_BY_VALUE = {
+    alta: 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/20',
+    media: 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-600 border border-yellow-500/20',
+    baja: 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-green-500/20 text-green-500 border border-green-500/20',
+};
+
+const FILTER_ACTIVE_CLASSES = ['bg-purple-600', 'dark:bg-fuchsia-600', 'text-white', 'shadow-md'];
+const FILTER_INACTIVE_CLASSES = ['text-slate-600', 'dark:text-slate-400'];
 
 // ====== Statistics ======
 const updateStats = () => {
@@ -103,13 +115,7 @@ const renderTaskItem = (task) => {
 
     if (priorityBadge) {
         priorityBadge.textContent = task.priority || 'media';
-        if (task.priority === 'alta') {
-            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/20';
-        } else if (task.priority === 'media') {
-            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-600 border border-yellow-500/20';
-        } else {
-            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-green-500/20 text-green-500 border border-green-500/20';
-        }
+        priorityBadge.className = PRIORITY_CLASS_BY_VALUE[task.priority] || PRIORITY_CLASS_BY_VALUE.media;
     }
 
     if (typeBadge) typeBadge.textContent = task.type || 'personal';
@@ -133,7 +139,7 @@ function renderAllTasks() {
 
 }
 
-taskList.addEventListener('click', (event) => {
+const handleTaskListClick = (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
@@ -157,10 +163,9 @@ taskList.addEventListener('click', (event) => {
     if (actionButton.classList.contains('complete-task-btn')) {
         toggleTask(taskId);
     }
-});
+};
 
-// ===== Add new task button =====
-newTaskForm.addEventListener('submit', (e) => {
+const handleNewTaskSubmit = (e) => {
     e.preventDefault();
 
     const priorityEl = document.getElementById('task-priority');
@@ -185,54 +190,47 @@ newTaskForm.addEventListener('submit', (e) => {
     input.value = '';
     renderAllTasks();
     saveTasks(tasks);
-});
+};
 
-
-    // ===== Mark all tasks as completed button =====
-btnMarkAllCompleted.addEventListener('click', () => {
-    tasks.forEach(t => t.completed = true);
+const handleMarkAllCompleted = () => {
+    tasks.forEach(taskItem => taskItem.completed = true);
     renderAllTasks();
     saveTasks(tasks);
-});
+};
 
-    // ===== Delete all completed tasks button =====
-btnDeleteAllCompleted.addEventListener('click', () => {
-    tasks = tasks.filter(t => !t.completed);
+const handleDeleteAllCompleted = () => {
+    tasks = tasks.filter(taskItem => !taskItem.completed);
     renderAllTasks();
     saveTasks(tasks);
-});
+};
 
-    // ===== Filter buttons =====
-    const buttons = document.querySelectorAll('.filter-btn');
+const setFilterButtonActiveState = (filterButton, isActive) => {
+    filterButton.classList.remove(...FILTER_ACTIVE_CLASSES, ...FILTER_INACTIVE_CLASSES);
+    if (isActive) {
+        filterButton.classList.add(...FILTER_ACTIVE_CLASSES);
+    } else {
+        filterButton.classList.add(...FILTER_INACTIVE_CLASSES);
+    }
+    filterButton.style.backgroundColor = "";
+    filterButton.dataset.active = isActive ? 'true' : 'false';
+    filterButton.setAttribute('aria-selected', isActive ? 'true' : 'false');
+};
 
-buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        buttons.forEach(b => {
-            b.classList.remove('bg-purple-600', 'dark:bg-fuchsia-600', 'text-white', 'shadow-md');
-            b.classList.add('text-slate-600', 'dark:text-slate-400');
-            b.style.backgroundColor = ""; 
-        });
-
-        btn.classList.add('bg-purple-600', 'dark:bg-fuchsia-600', 'text-white', 'shadow-md');
-        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
-
-        currentFilter = btn.dataset.filter;
-        renderAllTasks(); 
+const syncFilterButtonsUI = () => {
+    buttons.forEach(filterButton => {
+        setFilterButtonActiveState(filterButton, filterButton.dataset.filter === currentFilter);
     });
-});
+};
 
-    // ===== Search input =====
-searchInput.addEventListener('input', () => renderAllTasks());
+const handleFilterButtonClick = (filterButton) => {
+    currentFilter = filterButton.dataset.filter;
+    syncFilterButtonsUI();
+    renderAllTasks(); 
+};
 
-    // ===== Initialize app =====
-document.addEventListener('DOMContentLoaded', () => {
-    tasks = loadTasks();
-    renderAllTasks();
-});
+const handleSearchInput = () => renderAllTasks();
 
-    // ===== Toggle dark mode =====
-    const btnToggleDark = document.getElementById('toggle-dark');
-    const htmlElement = document.documentElement;
+const handleFilterChange = () => renderAllTasks();
 
 const toggleDarkMode = () => {
     htmlElement.classList.toggle('dark');
@@ -240,17 +238,40 @@ const toggleDarkMode = () => {
 
     saveTheme(isDark ? 'dark' : 'light');
 
-    btnToggleDark.innerText = isDark ? '☀️' : '🌙';
+    if (btnToggleDark) btnToggleDark.innerText = isDark ? '☀️' : '🌙';
     renderAllTasks(); 
 };
 
-btnToggleDark.addEventListener('click', toggleDarkMode);
+const applySavedTheme = () => {
+    if (loadTheme() === 'dark') {
+        htmlElement.classList.add('dark');
+        if (btnToggleDark) btnToggleDark.innerText = '☀️';
+    }
+};
 
-if (loadTheme() === 'dark') {
-    htmlElement.classList.add('dark');
-    if (btnToggleDark) btnToggleDark.innerText = '☀️';
-}
+const bindUIEvents = () => {
+    taskList.addEventListener('click', handleTaskListClick);
+    newTaskForm.addEventListener('submit', handleNewTaskSubmit);
+    btnMarkAllCompleted.addEventListener('click', handleMarkAllCompleted);
+    btnDeleteAllCompleted.addEventListener('click', handleDeleteAllCompleted);
+    searchInput.addEventListener('input', handleSearchInput);
+    filterPriority.addEventListener('change', handleFilterChange);
+    filterType.addEventListener('change', handleFilterChange);
+    btnToggleDark?.addEventListener('click', toggleDarkMode);
 
-    // ===== Filter change events =====
-filterPriority.addEventListener('change', () => renderAllTasks());
-filterType.addEventListener('change', () => renderAllTasks());
+    buttons.forEach(filterButton => {
+        filterButton.addEventListener('click', () => {
+            handleFilterButtonClick(filterButton);
+        });
+    });
+};
+
+const init = () => {
+    applySavedTheme();
+    tasks = loadTasks();
+    bindUIEvents();
+    syncFilterButtonsUI();
+    renderAllTasks();
+};
+
+init();
