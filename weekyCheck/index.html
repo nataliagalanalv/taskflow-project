@@ -62,19 +62,13 @@
                 <button id="toggle-dark" class="p-3 bg-white dark:bg-slate-800 shadow-xl rounded-full hover:scale-110 transition-all border border-gray-200 dark:border-white/10">🌙</button>
             </header>
 
-            <div class="flex gap-4 mb-8">
-                <button id="btn-new-task" class="px-8 py-3 bg-blue-600 dark:bg-[#00d2ff] text-white dark:text-slate-950 rounded-2xl shadow-xl dark:shadow-[0_0_20px_rgba(0,210,255,0.3)] font-black transition-all hover:-translate-y-1">
-                    + Nueva Tarea
-                </button>
-            </div>
-            
             <div id="form-container" class="mb-10 block w-full"> 
                 <form id="new-task-form" class="flex flex-col gap-4 p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border-2 border-purple-100 dark:border-fuchsia-500/20 transition-all">
         
                 <div class="flex flex-col md:flex-row gap-3">
                     <input type="text" id="task" placeholder="¿Qué hay que hacer hoy?" 
                         class="flex-1 p-3 bg-transparent focus:outline-none text-xl dark:text-white border-b-2 border-transparent focus:border-purple-400 dark:focus:border-[#00d2ff] transition-all">
-                    <button type="submit" class="px-8 py-3 bg-purple-600 dark:bg-fuchsia-600 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all active:scale-95">Agregar</button>
+                    <button type="submit" class="px-8 py-3 bg-purple-600 dark:bg-fuchsia-600 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition-all active:scale-95">Agregar nueva tarea</button>
                 </div>
 
                 <div class="flex flex-wrap gap-3">
@@ -137,7 +131,6 @@
     <template id="template-task">
     <li class="flex items-center justify-between p-5 bg-white dark:bg-slate-900/80 border border-gray-200 dark:border-fuchsia-500/20 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all duration-300 group">
         <div class="flex items-center gap-4">
-            <input type="checkbox" class="select w-6 h-6 accent-fuchsia-500 opacity-50 cursor-not-allowed" disabled>
             <div class="flex flex-col gap-1">
                 <span class="task-description font-semibold text-lg text-slate-700 dark:text-fuchsia-50"></span>
                 <div class="flex gap-2">

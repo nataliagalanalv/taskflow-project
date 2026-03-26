@@ -9,10 +9,23 @@ const VALIDATION_MESSAGES = {
   INVALID_TYPE: 'Debes seleccionar un tipo válido.',
 };
 
+/**
+ * Normalizes a title-like value by coercing to string and trimming spaces.
+ *
+ * @param {unknown} value - Raw title input.
+ * @returns {string} Normalized title.
+ */
 export function normalizeTitle(value) {
   return String(value ?? '').trim();
 }
 
+/**
+ * Sanitizes free text to reduce XSS risk.
+ * Removes HTML tags and escapes risky characters.
+ *
+ * @param {unknown} value - Raw text input.
+ * @returns {string} Sanitized text.
+ */
 export function sanitizeText(value) {
   const raw = String(value ?? '');
   const withoutTags = raw.replace(/<[^>]*>/g, '');
@@ -26,6 +39,22 @@ export function sanitizeText(value) {
     .trim();
 }
 
+/**
+ * Validates and sanitizes new task input.
+ *
+ * @param {{title: unknown, priority: unknown, type: unknown}} params - Candidate task fields.
+ * @returns {{
+ *   ok: true,
+ *   errors: string[],
+ *   errorsByField: { title: string[], priority: string[], type: string[] },
+ *   value: { title: string, priority: string, type: string }
+ * } | {
+ *   ok: false,
+ *   errors: string[],
+ *   errorsByField: { title: string[], priority: string[], type: string[] },
+ *   sanitized: { title: string, priority: string, type: string }
+ * }} Validation result.
+ */
 export function validateNewTask({ title, priority, type }) {
   const errors = [];
   const errorsByField = {
@@ -81,6 +110,12 @@ export function validateNewTask({ title, priority, type }) {
   };
 }
 
+/**
+ * Resolves the first known validation error code to a user-facing message.
+ *
+ * @param {string[]} [errorCodes=[]] - Validation error codes.
+ * @returns {string} Human-readable message or empty string.
+ */
 export function getFirstErrorMessage(errorCodes = []) {
   const firstCode = errorCodes[0];
   if (!firstCode) return '';
