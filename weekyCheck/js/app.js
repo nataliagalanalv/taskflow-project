@@ -1,6 +1,6 @@
 // ====== Variables ======
 import { loadTasks, saveTasks, loadTheme, saveTheme } from './services/db.js';
-import { validateNewTask } from './utils/validations.js';
+import { getFirstErrorMessage, validateNewTask } from './utils/validations.js';
 
 const btnMarkAllCompleted = document.getElementById('mark-all-completed');
 const btnDeleteAllCompleted = document.getElementById('delete-all-completed');
@@ -10,6 +10,7 @@ const taskList = document.getElementById('task-list');
 const taskTemplate = document.getElementById('template-task'); 
 const newTaskForm = document.getElementById('new-task-form'); 
 const input = document.getElementById('task');
+let taskTitleErrorEl = null;
 
 const filterPriority = document.getElementById('prioritySelect');
 const filterType = document.getElementById('typeSelect');
@@ -165,6 +166,28 @@ const handleTaskListClick = (event) => {
     }
 };
 
+const ensureTaskTitleErrorElement = () => {
+    if (taskTitleErrorEl) return taskTitleErrorEl;
+
+    taskTitleErrorEl = document.createElement('p');
+    taskTitleErrorEl.id = 'task-title-error';
+    taskTitleErrorEl.className = 'w-full text-sm font-semibold text-red-500 mt-2';
+
+    const inputRow = input?.closest('div.flex');
+    if (inputRow) {
+        inputRow.insertAdjacentElement('afterend', taskTitleErrorEl);
+    } else {
+        newTaskForm.appendChild(taskTitleErrorEl);
+    }
+
+    return taskTitleErrorEl;
+};
+
+const setTaskTitleError = (message) => {
+    const errorEl = ensureTaskTitleErrorElement();
+    errorEl.textContent = message || '';
+};
+
 const handleNewTaskSubmit = (e) => {
     e.preventDefault();
 
@@ -177,7 +200,12 @@ const handleNewTaskSubmit = (e) => {
         type: typeEl?.value,
     });
 
-    if (!validation.ok) return;
+    if (!validation.ok) {
+        const titleErrorMessage = getFirstErrorMessage(validation.errorsByField?.title);
+        setTaskTitleError(titleErrorMessage);
+        console.warn('Validation errors creating task:', validation.errorsByField);
+        return;
+    }
 
     tasks.push({
         id: Date.now(),
@@ -188,6 +216,7 @@ const handleNewTaskSubmit = (e) => {
     });
 
     input.value = '';
+    setTaskTitleError('');
     renderAllTasks();
     saveTasks(tasks);
 };
