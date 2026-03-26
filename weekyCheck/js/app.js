@@ -81,6 +81,9 @@ function renderAllTasks() {
             (currentFilter === 'pending' && !task.completed);
         
         const searchText = (searchInput?.value || "").toLowerCase();
+        const matchesSearch =
+            searchText === "" ||
+            (task.title || "").toLowerCase().includes(searchText);
 
         const valPriority = filterPriority.value; 
         const matchesPriority = valPriority === 'all' || task.priority === valPriority;
@@ -88,7 +91,7 @@ function renderAllTasks() {
         const valType = filterType.value;
         const matchesType = valType === 'all' || task.type === valType;
 
-        return matchesFilter && matchesType && matchesPriority && matchesType;
+        return matchesFilter && matchesSearch && matchesPriority && matchesType;
 
     });
 

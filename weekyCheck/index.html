@@ -20,7 +20,7 @@
     <div class="flex flex-col-reverse lg:flex-row min-h-screen w-full overflow-x-hidden">
 
         
-        <aside class="w-full lg:w-80 bg-purple-200 dark:bg-slate-900 p-6 border-t lg:border-t-0 lg:border-r border-gray-300 dark:border-slate-800 lg:h-screen lg:sticky lg:top-0 flex-shrink-0">
+        <aside class="w-full lg:w-80 bg-purple-200 dark:bg-slate-900 p-6 border-t lg:border-t-0 lg:border-r border-gray-300 dark:border-slate-800 lg:max-h-screen lg:overflow-y-auto lg:sticky lg:top-0 flex-shrink-0">
             <div class="profile mt-10 text-center">
                 <h2 class="text-3xl font-black mb-2 text-purple-900 dark:text-fuchsia-500 dark:drop-shadow-[0_0_10px_rgba(217,70,239,0.4)]">WeekyCheck</h2>
             </div>
@@ -55,9 +55,9 @@
         </aside>
 
         
-        <main class="flex-1 w-full p-6 lg:p-12 dark:bg-[#020617] transition-colors">
+        <main class="flex-1 w-full min-w-0 p-6 lg:p-12 dark:bg-[#020617] transition-colors">
             
-            <header class="flex justify-between items-center mb-12 w-full">
+            <header class="flex justify-between items-center flex-wrap gap-4 mb-12 w-full">
                 <h1 class="text-3xl lg:text-5xl font-black tracking-tighter">Hola, <span class="text-purple-600 dark:text-[#00d2ff] dark:drop-shadow-[0_0_10px_rgba(0,210,255,0.3)]">Usuario</span></h1>
                 <button id="toggle-dark" class="p-3 bg-white dark:bg-slate-800 shadow-xl rounded-full hover:scale-110 transition-all border border-gray-200 dark:border-white/10">🌙</button>
             </header>
