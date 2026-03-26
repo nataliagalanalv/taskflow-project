@@ -1,4 +1,7 @@
 // ====== Variables ======
+import { loadTasks, saveTasks, loadTheme, saveTheme } from './services/db.js';
+import { validateNewTask } from './utils/validations.js';
+
 const btnMarkAllCompleted = document.getElementById('mark-all-completed');
 const btnDeleteAllCompleted = document.getElementById('delete-all-completed');
 const searchInput = document.getElementById('search-task');
@@ -18,13 +21,6 @@ const percentageLabel = document.getElementById('percentage-label');
 
 let tasks = [];
 let currentFilter = 'all';
-
-// ====== LocalStorage ======
-const saveTasks = () => localStorage.setItem('tasks', JSON.stringify(tasks));
-const loadTasks = () => {
-    const saved = localStorage.getItem('tasks');
-    if (saved) tasks = JSON.parse(saved);
-};
 
 // ====== Statistics ======
 const updateStats = () => {
@@ -49,134 +45,168 @@ const updateStats = () => {
 // ====== Task management buttons ======
 const deleteTask = (id) => {
     tasks = tasks.filter(t => t.id !== id);
-    saveTasks();
+    saveTasks(tasks);
     renderAllTasks();
 };
 
 const toggleTask = (id) => {
     const task = tasks.find(t => t.id === id);
     if (task) task.completed = !task.completed;
-    saveTasks();
+    saveTasks(tasks);
     renderAllTasks();
 };
 
 const editTask = (id) => {
     const task = tasks.find(t => t.id === id);
+    if (!task) return;
     const newTitle = prompt('Editar tarea:', task.title);
     if (newTitle && newTitle.trim() !== '') {
         task.title = newTitle.trim();
-        saveTasks();
+        saveTasks(tasks);
         renderAllTasks();
     }
 };
 
 // ====== Render all tasks ======
-function renderAllTasks() {
-    taskList.innerHTML = ''; 
+const getFilteredTasks = () => {
+    const searchText = (searchInput?.value || "").toLowerCase();
+    const valPriority = filterPriority.value;
+    const valType = filterType.value;
 
-    const filteredTasks = tasks.filter(task => {
-        const matchesFilter = 
-            currentFilter === 'all' || 
-            (currentFilter === 'completed' && task.completed) || 
+    return tasks.filter(task => {
+        const matchesFilter =
+            currentFilter === 'all' ||
+            (currentFilter === 'completed' && task.completed) ||
             (currentFilter === 'pending' && !task.completed);
-        
-        const searchText = (searchInput?.value || "").toLowerCase();
+
         const matchesSearch =
             searchText === "" ||
             (task.title || "").toLowerCase().includes(searchText);
-
-        const valPriority = filterPriority.value; 
         const matchesPriority = valPriority === 'all' || task.priority === valPriority;
-
-        const valType = filterType.value;
         const matchesType = valType === 'all' || task.type === valType;
 
         return matchesFilter && matchesSearch && matchesPriority && matchesType;
-
     });
+};
 
+const renderTaskItem = (task) => {
+    const clone = taskTemplate.content.cloneNode(true);
+    const li = clone.querySelector('li');
+
+    if (li) li.dataset.taskId = String(task.id);
+
+    const titleSpan = clone.querySelector('.task-description');
+    const priorityBadge = clone.querySelector('.badge-priority');
+    const typeBadge = clone.querySelector('.badge-type');
+
+    if (titleSpan) titleSpan.textContent = task.title;
+
+    if (priorityBadge) {
+        priorityBadge.textContent = task.priority || 'media';
+        if (task.priority === 'alta') {
+            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/20';
+        } else if (task.priority === 'media') {
+            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-600 border border-yellow-500/20';
+        } else {
+            priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-green-500/20 text-green-500 border border-green-500/20';
+        }
+    }
+
+    if (typeBadge) typeBadge.textContent = task.type || 'personal';
+
+    if (task.completed && li) {
+        li.classList.add('opacity-50', 'line-through');
+    }
+
+    return clone;
+};
+
+function renderAllTasks() {
+    taskList.innerHTML = '';
+
+    const filteredTasks = getFilteredTasks();
     filteredTasks.forEach(task => {
-        const clone = taskTemplate.content.cloneNode(true);
-        const li = clone.querySelector('li');
-        
-        const titleSpan = clone.querySelector('.task-description');
-        const priorityBadge = clone.querySelector('.badge-priority');
-        const typeBadge = clone.querySelector('.badge-type');
-
-        if (titleSpan) titleSpan.textContent = task.title;
-
-        if (priorityBadge) {
-            priorityBadge.textContent = task.priority || 'media';
-            if (task.priority === 'alta') {
-                priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/20';
-            } else if (task.priority === 'media') {
-                priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-600 border border-yellow-500/20';
-            } else {
-                priorityBadge.className = 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-green-500/20 text-green-500 border border-green-500/20';
-            }
-        }
-
-        if (typeBadge) typeBadge.textContent = task.type || 'personal';
-
-        if (task.completed) {
-            li.classList.add('opacity-50', 'line-through');
-        }
-
-        clone.querySelector('.edit-task-btn')?.addEventListener('click', () => editTask(task.id));
-        clone.querySelector('.delete-task-btn')?.addEventListener('click', () => deleteTask(task.id));
-        clone.querySelector('.complete-task-btn')?.addEventListener('click', () => toggleTask(task.id));
-
-        taskList.appendChild(clone);
+        taskList.appendChild(renderTaskItem(task));
     });
 
     updateStats();
 
+}
+
+taskList.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const actionButton = target.closest('.edit-task-btn, .delete-task-btn, .complete-task-btn');
+    if (!actionButton) return;
+
+    const taskItem = actionButton.closest('li[data-task-id]');
+    if (!taskItem) return;
+
+    const taskId = Number(taskItem.dataset.taskId);
+    if (Number.isNaN(taskId)) return;
+
+    if (actionButton.classList.contains('edit-task-btn')) {
+        editTask(taskId);
+        return;
     }
+    if (actionButton.classList.contains('delete-task-btn')) {
+        deleteTask(taskId);
+        return;
+    }
+    if (actionButton.classList.contains('complete-task-btn')) {
+        toggleTask(taskId);
+    }
+});
 
-    // ===== Add new task button =====
-    newTaskForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const text = input.value.trim();
-    
-        const priorityEl = document.getElementById('task-priority');
-        const typeEl = document.getElementById('task-type');
-    
-        if (!text) return;
+// ===== Add new task button =====
+newTaskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-        tasks.push({
-            id: Date.now(),
-            title: text,
-            completed: false,
-            priority: priorityEl.value, 
-            type: typeEl.value          
-        });
+    const priorityEl = document.getElementById('task-priority');
+    const typeEl = document.getElementById('task-type');
 
-        input.value = ''; 
-        renderAllTasks();
-        saveTasks();
+    const validation = validateNewTask({
+        title: input?.value,
+        priority: priorityEl?.value,
+        type: typeEl?.value,
     });
+
+    if (!validation.ok) return;
+
+    tasks.push({
+        id: Date.now(),
+        title: validation.value.title,
+        completed: false,
+        priority: validation.value.priority,
+        type: validation.value.type,
+    });
+
+    input.value = '';
+    renderAllTasks();
+    saveTasks(tasks);
+});
 
 
     // ===== Mark all tasks as completed button =====
-    btnMarkAllCompleted.addEventListener('click', () => {
-        tasks.forEach(t => t.completed = true);
-        renderAllTasks();
-        saveTasks();
-    });
+btnMarkAllCompleted.addEventListener('click', () => {
+    tasks.forEach(t => t.completed = true);
+    renderAllTasks();
+    saveTasks(tasks);
+});
 
     // ===== Delete all completed tasks button =====
-    btnDeleteAllCompleted.addEventListener('click', () => {
-        tasks = tasks.filter(t => !t.completed);
-        renderAllTasks();
-        saveTasks();
-    });
+btnDeleteAllCompleted.addEventListener('click', () => {
+    tasks = tasks.filter(t => !t.completed);
+    renderAllTasks();
+    saveTasks(tasks);
+});
 
     // ===== Filter buttons =====
     const buttons = document.querySelectorAll('.filter-btn');
 
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-        
+buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
         buttons.forEach(b => {
             b.classList.remove('bg-purple-600', 'dark:bg-fuchsia-600', 'text-white', 'shadow-md');
             b.classList.add('text-slate-600', 'dark:text-slate-400');
@@ -188,46 +218,39 @@ function renderAllTasks() {
 
         currentFilter = btn.dataset.filter;
         renderAllTasks(); 
-        });
     });
+});
 
     // ===== Search input =====
-    searchInput.addEventListener('input', () => renderAllTasks());
+searchInput.addEventListener('input', () => renderAllTasks());
 
     // ===== Initialize app =====
-    document.addEventListener('DOMContentLoaded', () => {
-        loadTasks();
-        renderAllTasks();
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    tasks = loadTasks();
+    renderAllTasks();
+});
 
     // ===== Toggle dark mode =====
     const btnToggleDark = document.getElementById('toggle-dark');
     const htmlElement = document.documentElement;
 
-    const toggleDarkMode = () => {
-        htmlElement.classList.toggle('dark');
-        const isDark = htmlElement.classList.contains('dark');
-    
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    
+const toggleDarkMode = () => {
+    htmlElement.classList.toggle('dark');
+    const isDark = htmlElement.classList.contains('dark');
+
+    saveTheme(isDark ? 'dark' : 'light');
+
     btnToggleDark.innerText = isDark ? '☀️' : '🌙';
-        renderAllTasks(); 
-    };
-
-    btnToggleDark.addEventListener('click', toggleDarkMode);
-
-    if (localStorage.getItem('theme') === 'dark') {
-        htmlElement.classList.add('dark');
-    if (btnToggleDark) btnToggleDark.innerText = '☀️';
-    }
-
-    // ===== Save and load tasks from localStorage =====
-    const savedTasks = localStorage.getItem('tasks');
-    if (savedTasks) {
-        tasks = JSON.parse(savedTasks);
-    }
     renderAllTasks(); 
+};
+
+btnToggleDark.addEventListener('click', toggleDarkMode);
+
+if (loadTheme() === 'dark') {
+    htmlElement.classList.add('dark');
+    if (btnToggleDark) btnToggleDark.innerText = '☀️';
+}
 
     // ===== Filter change events =====
-    filterPriority.addEventListener('change', () => renderAllTasks());
-    filterType.addEventListener('change', () => renderAllTasks());
+filterPriority.addEventListener('change', () => renderAllTasks());
+filterType.addEventListener('change', () => renderAllTasks());
