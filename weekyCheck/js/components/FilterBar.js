@@ -11,7 +11,15 @@ export const FILTER_EVENTS = {
   TYPE_CHANGE: 'filter-type-change',
   STATUS_CHANGE: 'filter-status-change',
   SEARCH_CHANGE: 'filter-search-change',
+  SORT_CHANGE: 'filter-sort-change',
   FILTER_CHANGE: 'filter-change'
+};
+
+// Pesos de prioridad para ordenación
+export const PRIORITY_WEIGHTS = {
+  alta: 1,
+  media: 2,
+  baja: 3
 };
 
 export class FilterBar {
@@ -20,7 +28,9 @@ export class FilterBar {
     this.prioritySelect = null;
     this.typeSelect = null;
     this.searchInput = null;
+    this.sortSelect = null;
     this.currentFilter = FILTER_TYPES.ALL;
+    this.currentSort = 'recent';
   }
 
   /**
@@ -44,6 +54,7 @@ export class FilterBar {
     this.filterButtons = document.querySelectorAll('.filter-btn');
     this.prioritySelect = document.getElementById('prioritySelect');
     this.typeSelect = document.getElementById('typeSelect');
+    this.sortSelect = document.getElementById('sortSelect');
     this.searchInput = document.getElementById('search-task');
   }
 
@@ -120,6 +131,14 @@ export class FilterBar {
    */
   getTypeFilter() {
     return this.typeSelect?.value || 'all';
+  }
+
+  /**
+   * Get current sort value
+   * @returns {string}
+   */
+  getSortFilter() {
+    return this.sortSelect?.value || 'recent';
   }
 
   /**
@@ -224,6 +243,28 @@ export class FilterBar {
   }
 
   /**
+   * Bind sort dropdown change event
+   * @param {Function} callback - Callback when sort changes
+   */
+  bindSortSelect(callback) {
+    if (this.sortSelect) {
+      this.sortSelect.addEventListener('change', () => {
+        this.currentSort = this.sortSelect.value;
+        // Emitir evento personalizado de cambio de ordenación
+        this.emitEvent(FILTER_EVENTS.SORT_CHANGE, {
+          sort: this.currentSort
+        });
+        // Emitir evento genérico de filtro
+        this.emitEvent(FILTER_EVENTS.FILTER_CHANGE, {
+          type: 'sort',
+          value: this.currentSort
+        });
+        callback && callback();
+      });
+    }
+  }
+
+  /**
    * Bind all events
    * @param {Function} onFilterChange - Callback for filter changes
    * @param {Function} onSearchChange - Callback for search changes
@@ -232,5 +273,6 @@ export class FilterBar {
     this.bindFilterButtons(onFilterChange);
     this.bindSearchInput(onSearchChange);
     this.bindFilterDropdowns(onFilterChange);
+    this.bindSortSelect(onFilterChange);
   }
 }

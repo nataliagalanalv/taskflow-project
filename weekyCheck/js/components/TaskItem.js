@@ -41,6 +41,12 @@ export class TaskItemRenderer {
       }
     }
 
+    // Mantener el resaltado si esta tarea está seleccionada
+    if (window.selectedTaskId === task.id && !task.completed) {
+      li.classList.add('border-fuchsia-500', 'shadow-[0_0_15px_rgba(217,70,239,0.3)]');
+      li.style.borderColor = 'rgba(217, 70, 239, 0.8)';
+    }
+
     return clone;
   }
 }

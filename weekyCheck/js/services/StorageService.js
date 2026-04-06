@@ -23,15 +23,16 @@ const STORAGE_KEYS = {
 const TASK_STRUCTURE = {
   requiredFields: ['id', 'title', 'completed'],
   validFieldTypes: {
-    id: 'string',
+    id: ['number', 'string'], // Acepta tanto número como string
     title: 'string',
     description: 'string',
     completed: 'boolean',
-    createdAt: 'string',
+    createdAt: ['number', 'string'], // Acepta timestamp numérico o string
     updatedAt: 'string',
     dueDate: 'string',
     priority: 'string',
     category: 'string',
+    type: 'string', // Añadido para compatibilidad con el modelo actual
     tags: 'object' // array
   }
 };
@@ -60,16 +61,25 @@ export class StorageService {
     for (const [field, expectedType] of Object.entries(TASK_STRUCTURE.validFieldTypes)) {
       if (field in task && task[field] !== null && task[field] !== undefined) {
         const actualType = Array.isArray(task[field]) ? 'object' : typeof task[field];
-        if (actualType !== expectedType) {
-          console.warn(`StorageService: Tarea inválida - campo ${field} tiene tipo incorrecto`, task);
+        // expectedType puede ser un string o un array de strings
+        const isValidType = Array.isArray(expectedType) 
+          ? expectedType.includes(actualType)
+          : actualType === expectedType;
+        if (!isValidType) {
+          console.warn(`StorageService: Tarea inválida - campo ${field} tiene tipo incorrecto (esperado: ${expectedType}, obtenido: ${actualType})`, task);
           return false;
         }
       }
     }
 
     // Validaciones específicas
-    if (typeof task.id !== 'string' || task.id.trim() === '') {
-      console.warn('StorageService: Tarea inválida - id debe ser string no vacío', task);
+    // El id puede ser número (Date.now()) o string, pero debe ser válido
+    if (typeof task.id !== 'number' && typeof task.id !== 'string') {
+      console.warn('StorageService: Tarea inválida - id debe ser número o string', task);
+      return false;
+    }
+    if (typeof task.id === 'string' && task.id.trim() === '') {
+      console.warn('StorageService: Tarea inválida - id string no puede estar vacío', task);
       return false;
     }
 
