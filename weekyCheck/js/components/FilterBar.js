@@ -142,8 +142,47 @@ export class FilterBar {
   }
 
   /**
-   * Create a filter function based on current filter state
-   * @returns {Function} Filter function
+   * Crea una función de filtrado que aplica múltiples criterios de forma acumulativa.
+   * 
+   * Esta función devuelve un closure que captura el estado actual de todos los filtros
+   * (búsqueda, prioridad, tipo, estado) y retorna una función que puede ser aplicada
+   * a un array de tareas para filtrarlas según esos criterios.
+   * 
+   * **Criterios de filtrado aplicados:**
+   * 1. **Estado (status)**: Filtra por estado de completitud
+   *    - 'all': Muestra todas las tareas
+   *    - 'completed': Solo tareas completadas (task.completed === true)
+   *    - 'pending': Solo tareas pendientes (task.completed === false)
+   * 
+   * 2. **Búsqueda (search)**: Filtra por coincidencia en el título (case-insensitive)
+   *    - Si el texto de búsqueda está vacío, no aplica restricción
+   *    - Si hay texto, solo incluye tareas cuyo título lo contengan
+   * 
+   * 3. **Prioridad (priority)**: Filtra por nivel de prioridad
+   *    - 'all': Muestra tareas de cualquier prioridad
+   *    - 'alta', 'media', 'baja': Solo tareas de esa prioridad específica
+   * 
+   * 4. **Tipo (type)**: Filtra por categoría/tipo de tarea
+   *    - 'all': Muestra tareas de cualquier tipo
+   *    - Otro valor: Solo tareas de ese tipo específico
+   * 
+   * **Lógica de combinación:**
+   * Una tarea se incluye en el resultado solo si cumple TODOS los criterios activos
+   * (operación AND lógico). Los criterios en 'all' o vacíos no restringen.
+   * 
+   * @function createFilterFn
+   * @returns {Function} Función de filtrado que acepta un array de tareas y retorna
+   *                     solo las que cumplen todos los criterios activos
+   * 
+   * @example
+   * // Configurar filtros: búsqueda "informe", prioridad "alta", tipo "trabajo", estado "pending"
+   * const filterFn = filterBar.createFilterFn();
+   * const filteredTasks = filterFn(allTasks);
+   * // Resultado: Solo tareas que:
+   * // - Tienen "informe" en el título
+   * // - Son de prioridad alta
+   * // - Son de tipo trabajo
+   * // - Están pendientes (no completadas)
    */
   createFilterFn() {
     return (tasks) => {

@@ -30,7 +30,23 @@ export class ThemeService {
   }
 
   /**
-   * Toggle between light and dark themes
+   * Alterna entre los temas claro y oscuro, persistiendo la preferencia en LocalStorage.
+   * 
+   * Esta función verifica el estado actual del tema y aplica el tema opuesto:
+   * - Si el tema actual es oscuro → aplica tema claro
+   * - Si el tema actual es claro → aplica tema oscuro
+   * 
+   * La preferencia del usuario se guarda automáticamente en LocalStorage para que
+   * persista entre sesiones y recargas de página.
+   * 
+   * @function toggleDarkMode
+   * @returns {void}
+   * 
+   * @example
+   * // Alternar tema
+   * themeService.toggle();
+   * // Si estaba en modo oscuro → cambia a claro y guarda 'light' en LocalStorage
+   * // Si estaba en modo claro → cambia a oscuro y guarda 'dark' en LocalStorage
    */
   toggle() {
     if (this.htmlElement.classList.contains('dark')) {
@@ -41,7 +57,21 @@ export class ThemeService {
   }
 
   /**
-   * Apply dark theme
+   * Aplica el tema oscuro y persiste la preferencia en LocalStorage.
+   * 
+   * Esta función:
+   * 1. Añade la clase 'dark' al elemento raíz HTML
+   * 2. Actualiza el estado interno del servicio
+   * 3. Guarda la preferencia 'dark' en LocalStorage usando StorageService
+   * 4. Actualiza el botón del toggle con el emoji ☀️ (para indicar que puede cambiar a claro)
+   * 
+   * @function applyDarkTheme
+   * @returns {void}
+   * 
+   * @example
+   * // Aplicar tema oscuro
+   * themeService.applyDarkTheme();
+   * // Resultado: HTML tiene clase 'dark', LocalStorage guarda 'dark', botón muestra ☀️
    */
   applyDarkTheme() {
     this.htmlElement.classList.add('dark');
@@ -51,7 +81,21 @@ export class ThemeService {
   }
 
   /**
-   * Apply light theme
+   * Aplica el tema claro y persiste la preferencia en LocalStorage.
+   * 
+   * Esta función:
+   * 1. Elimina la clase 'dark' del elemento raíz HTML
+   * 2. Actualiza el estado interno del servicio
+   * 3. Guarda la preferencia 'light' en LocalStorage usando StorageService
+   * 4. Actualiza el botón del toggle con el emoji 🌙 (para indicar que puede cambiar a oscuro)
+   * 
+   * @function applyLightTheme
+   * @returns {void}
+   * 
+   * @example
+   * // Aplicar tema claro
+   * themeService.applyLightTheme();
+   * // Resultado: HTML no tiene clase 'dark', LocalStorage guarda 'light', botón muestra 🌙
    */
   applyLightTheme() {
     this.htmlElement.classList.remove('dark');

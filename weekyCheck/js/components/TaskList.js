@@ -119,7 +119,36 @@ export class TaskList {
   }
 
   /**
-   * Render all filtered tasks
+   * Renderiza todas las tareas aplicando el flujo de filtrado cruzado.
+   * 
+   * Esta función implementa un sistema de filtrado múltiple que combina varios criterios:
+   * 1. **Búsqueda de texto**: Filtra tareas cuyo título coincide con el texto de búsqueda (insensitive)
+   * 2. **Filtro de prioridad**: Filtra por nivel de prioridad (alta, media, baja)
+   * 3. **Filtro de tipo**: Filtra por tipo de tarea (ej: trabajo, personal, etc.)
+   * 4. **Filtro de estado**: Filtra por estado (todas, pendientes, completadas)
+   * 5. **Ordenación**: Ordena el resultado por fecha, prioridad o alfabéticamente
+   * 
+   * El proceso de filtrado es acumulativo - una tarea debe cumplir TODOS los criterios activos
+   * para ser incluida en el resultado final. Si un filtro está en "all" o vacío, no aplica restricción.
+   * 
+   * Después del filtrado, las tareas se ordenan según el criterio seleccionado y se renderizan
+   * en el DOM usando el renderer de TaskItem.
+   * 
+   * @function renderAllTasks
+   * @returns {void}
+   * 
+   * @example
+   * // Flujo de filtrado:
+   * // 1. Obtener todas las tareas: [tarea1, tarea2, tarea3, ...]
+   * // 2. Aplicar filtros cruzados:
+   * //    - Búsqueda: "informe" → filtra por título
+   * //    - Prioridad: "alta" → solo tareas de prioridad alta
+   * //    - Tipo: "trabajo" → solo tareas de tipo trabajo
+   * //    - Estado: "pending" → solo tareas no completadas
+   * // 3. Resultado filtrado: [tarea2, tarea5] (cumplen todos los criterios)
+   * // 4. Ordenar por prioridad → [tarea5, tarea2]
+   * // 5. Renderizar en el DOM
+   * taskList.render();
    */
   render() {
     if (!this.container || !this.renderer) return;
@@ -140,8 +169,33 @@ export class TaskList {
   }
 
   /**
-   * Bind click events for task actions (edit, delete, complete) and task selection
-   * @param {Object} handlers - Object with edit, delete, toggle callback functions
+   * Gestiona los eventos de los botones de acción de las tareas y la selección de tareas.
+   * 
+   * Esta función implementa un sistema de delegación de eventos que maneja tres tipos de acciones:
+   * 1. **Editar tarea**: Dispara el callback `edit` cuando se hace click en el botón de edición
+   * 2. **Eliminar tarea**: Dispara el callback `delete` y limpia la selección si la tarea estaba seleccionada
+   * 3. **Completar tarea**: Dispara el callback `toggle` y limpia la selección si la tarea estaba seleccionada
+   * 
+   * Además, permite seleccionar una tarea para el modo enfoque haciendo click directamente sobre ella
+   * (siempre que no se haya hecho click en un botón de acción).
+   * 
+   * El sistema utiliza event delegation en el contenedor padre para mejorar el rendimiento,
+   * evitando tener que añadir listeners individuales a cada tarea.
+   * 
+   * @function managerTask
+   * @param {Object} handlers - Objeto con callbacks para las acciones de tareas:
+   *   @param {Function} handlers.edit - Callback ejecutado al editar una tarea (recibe taskId)
+   *   @param {Function} handlers.delete - Callback ejecutado al eliminar una tarea (recibe taskId)
+   *   @param {Function} handlers.toggle - Callback ejecutado al completar/descompletar una tarea (recibe taskId)
+   * @returns {void}
+   * 
+   * @example
+   * // Configurar manejadores de tareas
+   * taskList.bindActions({
+   *   edit: (taskId) => taskController.editTask(taskId),
+   *   delete: (taskId) => taskController.deleteTask(taskId),
+   *   toggle: (taskId) => taskController.toggleTask(taskId)
+   * });
    */
   bindActions(handlers) {
     if (!this.container) return;
