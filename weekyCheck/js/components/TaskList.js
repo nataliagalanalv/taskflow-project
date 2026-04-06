@@ -1,8 +1,10 @@
 /**
  * TaskList - Componente para gestionar la lista de tareas
+ * Escucha eventos personalizados de FilterBar para filtrar reactivamente
  */
 
 import { TaskItemRenderer } from './TaskItem.js';
+import { FILTER_EVENTS } from './FilterBar.js';
 
 export class TaskList {
   constructor(taskCollection, filterFn) {
@@ -11,6 +13,16 @@ export class TaskList {
     this.container = null;
     this.template = null;
     this.renderer = null;
+    // Referencia externa a FilterBar para obtener la función de filtro actualizada
+    this.filterBar = null;
+  }
+
+  /**
+   * Establecer referencia al FilterBar para escucha reactiva
+   * @param {Object} filterBar - Instancia de FilterBar
+   */
+  setFilterBar(filterBar) {
+    this.filterBar = filterBar;
   }
 
   /**
@@ -23,6 +35,38 @@ export class TaskList {
   }
 
   /**
+   * Bind to custom filter events for reactive filtering
+   * Escucha eventos personalizados emitidos por FilterBar
+   * @param {Function} onFilterTrigger - Callback para disparar el re-renderizado
+   */
+  bindFilterEvents(onFilterTrigger) {
+    // Escuchar evento de cambio de prioridad
+    document.addEventListener(FILTER_EVENTS.PRIORITY_CHANGE, () => {
+      onFilterTrigger && onFilterTrigger();
+    });
+
+    // Escuchar evento de cambio de tipo
+    document.addEventListener(FILTER_EVENTS.TYPE_CHANGE, () => {
+      onFilterTrigger && onFilterTrigger();
+    });
+
+    // Escuchar evento de cambio de estado
+    document.addEventListener(FILTER_EVENTS.STATUS_CHANGE, () => {
+      onFilterTrigger && onFilterTrigger();
+    });
+
+    // Escuchar evento de cambio de búsqueda
+    document.addEventListener(FILTER_EVENTS.SEARCH_CHANGE, () => {
+      onFilterTrigger && onFilterTrigger();
+    });
+
+    // Escuchar evento genérico de filtro (para cualquier otro cambio)
+    document.addEventListener(FILTER_EVENTS.FILTER_CHANGE, () => {
+      onFilterTrigger && onFilterTrigger();
+    });
+  }
+
+  /**
    * Render all filtered tasks
    */
   render() {
@@ -30,7 +74,10 @@ export class TaskList {
 
     this.container.innerHTML = '';
     const tasks = this.taskCollection.getAll();
-    const filteredTasks = this.filterFn ? this.filterFn(tasks) : tasks;
+    // Si tenemos filterBar, usamos su función de filtro actualizada
+    const filteredTasks = this.filterBar 
+      ? this.filterBar.createFilterFn()(tasks)
+      : (this.filterFn ? this.filterFn(tasks) : tasks);
 
     filteredTasks.forEach(task => {
       this.container.appendChild(this.renderer.render(task));

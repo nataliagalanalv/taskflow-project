@@ -2,11 +2,17 @@
 
 
 
+
+
 ## Bloque 1. Problemas de lógica pura
 
 
 
+
+
 El código generado para estos tests se localiza en docs/ai/logic-tests, tanto el creado manualmente como el generado por la IA además de su explicación a porqué sus métodos son más óptimos. En este documento no se incluirá código. 
+
+
 
 
 
@@ -23,8 +29,6 @@ El código generado para estos tests se localiza en docs/ai/logic-tests, tanto e
 
 
 * Calidad y comprensión del código: La IA usó métodos que conocía pero no con la lógica que yo hubiera pensado. Además sugiere dos opciones, facilitando explicación de por que la segunda es mejor, se trata de una implementación con dos punteros sólo, lo que genera una rápida respuesta y no requiere tanto uso de memoria.
-
-
 
 
 
@@ -66,7 +70,11 @@ El código generado para estos tests se localiza en docs/ai/logic-tests, tanto e
 
 
 
+
+
 ## Bloque 2. Problemas dentro del proyecto WeekyCheck
+
+
 
 
 
@@ -74,71 +82,19 @@ El código generado para estos tests se localiza en docs/ai/logic-tests, tanto e
 
 
 
-Objetivo: Hacer que el selector de prioridad funcione de verdad para filtrar la lista.
+* Objetivo: Hacer que el selector de prioridad funcione de verdad para filtrar la lista
 
 
 
-Ubicación: js/components/FilterBar.js y js/components/TaskList.js.
+* Tiempo manual: 30 minutos
 
 
 
-Sin IA (Manual): Intenta escribir una función sencilla que recorra el array de tareas y oculte los elementos del DOM que no coincidan con la prioridad seleccionada.
+* Tiempo con IA: 35 segundos
 
 
 
-Con IA (Cline + MCP): > Prompt: "@filesystem Actúa como un Desarrollador Senior. Refactoriza FilterBar.js para que emita un evento personalizado cuando cambie la prioridad. Luego, modifica TaskList.js para que escuche ese evento y filtre las tareas de forma reactiva sin recargar la página."
-
-
-
-Qué comparar: Fíjate en cómo la IA maneja la "comunicación entre componentes", algo que suele ser difícil de hacer a mano limpiamente.
-
-
-
-
-
-// Versión Manual Simple
-
-const filtroPrioridad = document.getElementById('priority-filter');
-
-
-
-filtroPrioridad.addEventListener('change', () => {
-
-&#x20;   const valor = filtroPrioridad.value;
-
-&#x20;   const tareas = document.querySelectorAll('.task-item');
-
-
-
-&#x20;   tareas.forEach(tarea => {
-
-&#x20;       if (valor === 'all') {
-
-&#x20;           tarea.style.display = 'block';
-
-&#x20;       } else {
-
-&#x20;           // Comprobamos si el texto de la tarea contiene la prioridad
-
-&#x20;           if (tarea.innerText.toLowerCase().includes(valor)) {
-
-&#x20;               tarea.style.display = 'block';
-
-&#x20;           } else {
-
-&#x20;               tarea.style.display = 'none';
-
-&#x20;           }
-
-&#x20;       }
-
-&#x20;   });
-
-});
-
-
-
-
+* Calidad y comprensión del código: La lógica de la app ahora funciona de forma reactiva: cuando el usuario cambia la prioridad en FilterBar, se emite un evento personalizado que TaskList escucha para volver a renderizarse sin necesidad de recargar la página. Desde el archivo app.js se establece la referencia cruzada y vincula los eventos reactivos.
 
 
 
@@ -148,65 +104,19 @@ filtroPrioridad.addEventListener('change', () => {
 
 
 
-Objetivo: Mejorar el guardado de datos para que no se corrompan y manejar errores.
+* Objetivo: Mejorar el guardado de datos para que no se corrompan y manejar errores.
 
 
 
-Ubicación: js/services/StorageService.js.
+* Tiempo manual: 20 minutos
 
 
 
-Sin IA (Manual): Escribe un localStorage.setItem() y getItem() básico.
+* Tiempo con IA: 30 segundos
 
 
 
-Con IA (Cline + MCP):
-
-
-
-Prompt: "@filesystem Revisa StorageService.js. Implementa un sistema de persistencia robusto que incluya: 1. Manejo de errores con try/catch. 2. Validación de datos antes de guardar. 3. Una función para limpiar todas las tareas. Explica por qué es importante validar los datos al leer de LocalStorage."
-
-
-
-Qué comparar: La diferencia entre un código que "funciona" y un código "a prueba de fallos" (production-ready).
-
-
-
-
-
-// Versión Manual Simple
-
-const StorageService = {
-
-&#x20;   saveTasks: (tasks) => {
-
-&#x20;       localStorage.setItem('tasks', JSON.stringify(tasks));
-
-&#x20;   },
-
-
-
-&#x20;   getTasks: () => {
-
-&#x20;       const data = localStorage.getItem('tasks');
-
-&#x20;       return data ? JSON.parse(data) : \[];
-
-&#x20;   },
-
-
-
-&#x20;   clear: () => {
-
-&#x20;       localStorage.removeItem('tasks');
-
-&#x20;   }
-
-};
-
-
-
-export default StorageService;
+* Calidad y comprensión del código: Todas las operaciones (loadTasks, saveTasks, loadTheme, saveTheme, clearTasks, clearAll, getStorageStats) ahora están envueltas en bloques try/catch. Los errores se registran con console.error para debugging y en caso de error crítico, se limpia el storage para evitar corrupción de datos
 
 
 
@@ -216,65 +126,37 @@ export default StorageService;
 
 
 
-Objetivo: Mostrar hace cuánto se creó la tarea (ej: "hace 5 min").
+* Objetivo: Mostrar hace cuánto se creó la tarea 
 
 
 
-Ubicación: Crear js/utils/dateFormatter.js.
+* Tiempo manual: 25 minutos
 
 
 
-Sin IA (Manual): Intenta restar la fecha actual de la fecha de creación y mostrar los minutos.
+* Tiempo con IA: 30 segundos
 
 
 
-Con IA (Cline + MCP):
-
-
-
-Prompt: "@filesystem Crea un nuevo archivo en js/utils/dateFormatter.js. Necesito una función que reciba un timestamp y devuelva una cadena relativa (ej: 'justo ahora', 'hace 2 horas', 'ayer'). No uses librerías externas como Moment.js, usa la API nativa Intl.RelativeTimeFormat de JavaScript."
-
-
-
-Qué comparar: Verás cómo la IA conoce APIs modernas de JavaScript que nosotros a veces olvidamos que existen.
+* Calidad y comprensión del código: Sin usar librerías externas, Cline ha usado API nativa de JavaScript y ha creado un nuevo archivo que soporta múltiples formatos de entrada: timestamp en milisegundos, string ISO, o objeto Date. Incluye validación de fechas y manejo de errores
 
 
 
 
 
-// Versión Manual Simple
-
-function formatRelativeTime(fechaIso) {
-
-&#x20;   const ahora = new Date();
-
-&#x20;   const creacion = new Date(fechaIso);
-
-&#x20;   const diferenciaMs = ahora - creacion;
-
-&#x20;   
-
-&#x20;   const minutos = Math.floor(diferenciaMs / 60000);
-
-&#x20;   const horas = Math.floor(minutos / 60);
 
 
 
-&#x20;   if (minutos < 1) return "Justo ahora";
-
-&#x20;   if (minutos < 60) return `Hace ${minutos} min`;
-
-&#x20;   if (horas < 24) return `Hace ${horas} horas`;
-
-&#x20;   
-
-&#x20;   return creacion.toLocaleDateString();
-
-}
 
 
 
-export default formatRelativeTime;
+
+
+
+
+
+
+
 
 
 

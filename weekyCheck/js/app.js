@@ -46,6 +46,8 @@ class WeekyCheckApp {
       this.taskCollection,
       () => this.getFilteredTasks()
     );
+    // Establecer referencia cruzada para filtrado reactivo
+    this.taskList.setFilterBar(this.filterBar);
     
     // DOM elements for form
     this.newTaskForm = document.getElementById('new-task-form');
@@ -113,11 +115,14 @@ class WeekyCheckApp {
       this.taskController.deleteAllCompleted();
     });
     
-    // Filter events
+    // Filter events - Bind traditional callbacks
     this.filterBar.bindEvents(
       () => this.render(), // onFilterChange
       () => this.render()  // onSearchChange
     );
+    
+    // Reactive filter events - TaskList escucha eventos personalizados
+    this.taskList.bindFilterEvents(() => this.render());
   }
 
   /**

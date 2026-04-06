@@ -1,8 +1,18 @@
 /**
  * FilterBar - Componente para gestionar los filtros de tareas
+ * Emite eventos personalizados cuando los filtros cambian
  */
 
 import { FILTER_ACTIVE_CLASSES, FILTER_INACTIVE_CLASSES, FILTER_TYPES } from '../utils/constants.js';
+
+// Nombres de eventos personalizados
+export const FILTER_EVENTS = {
+  PRIORITY_CHANGE: 'filter-priority-change',
+  TYPE_CHANGE: 'filter-type-change',
+  STATUS_CHANGE: 'filter-status-change',
+  SEARCH_CHANGE: 'filter-search-change',
+  FILTER_CHANGE: 'filter-change'
+};
 
 export class FilterBar {
   constructor() {
@@ -11,6 +21,20 @@ export class FilterBar {
     this.typeSelect = null;
     this.searchInput = null;
     this.currentFilter = FILTER_TYPES.ALL;
+  }
+
+  /**
+   * Emitir un evento personalizado
+   * @param {string} eventName - Nombre del evento
+   * @param {Object} detail - Datos del evento
+   */
+  emitEvent(eventName, detail = {}) {
+    const event = new CustomEvent(eventName, {
+      detail,
+      bubbles: true,
+      composed: true
+    });
+    document.dispatchEvent(event);
   }
 
   /**
@@ -132,7 +156,17 @@ export class FilterBar {
   bindFilterButtons(callback) {
     this.filterButtons.forEach(filterButton => {
       filterButton.addEventListener('click', () => {
-        this.setFilter(filterButton.dataset.filter);
+        const newFilter = filterButton.dataset.filter;
+        this.setFilter(newFilter);
+        // Emitir evento personalizado de cambio de estado
+        this.emitEvent(FILTER_EVENTS.STATUS_CHANGE, {
+          status: newFilter
+        });
+        // Emitir evento genérico de filtro
+        this.emitEvent(FILTER_EVENTS.FILTER_CHANGE, {
+          type: 'status',
+          value: newFilter
+        });
         callback && callback();
       });
     });
@@ -145,6 +179,10 @@ export class FilterBar {
   bindSearchInput(callback) {
     if (this.searchInput) {
       this.searchInput.addEventListener('input', () => {
+        // Emitir evento personalizado de cambio de búsqueda
+        this.emitEvent(FILTER_EVENTS.SEARCH_CHANGE, {
+          searchText: this.searchInput.value
+        });
         callback && callback();
       });
     }
@@ -157,11 +195,29 @@ export class FilterBar {
   bindFilterDropdowns(callback) {
     if (this.prioritySelect) {
       this.prioritySelect.addEventListener('change', () => {
+        // Emitir evento personalizado de cambio de prioridad
+        this.emitEvent(FILTER_EVENTS.PRIORITY_CHANGE, {
+          priority: this.prioritySelect.value
+        });
+        // Emitir evento genérico de filtro
+        this.emitEvent(FILTER_EVENTS.FILTER_CHANGE, {
+          type: 'priority',
+          value: this.prioritySelect.value
+        });
         callback && callback();
       });
     }
     if (this.typeSelect) {
       this.typeSelect.addEventListener('change', () => {
+        // Emitir evento personalizado de cambio de tipo
+        this.emitEvent(FILTER_EVENTS.TYPE_CHANGE, {
+          type: this.typeSelect.value
+        });
+        // Emitir evento genérico de filtro
+        this.emitEvent(FILTER_EVENTS.FILTER_CHANGE, {
+          type: 'type',
+          value: this.typeSelect.value
+        });
         callback && callback();
       });
     }
