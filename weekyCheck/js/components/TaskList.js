@@ -211,8 +211,9 @@ export class TaskList {
         const taskItem = actionButton.closest('li[data-task-id]');
         if (!taskItem) return;
 
-        const taskId = Number(taskItem.dataset.taskId);
-        if (Number.isNaN(taskId)) return;
+        // Keep taskId as string to match API format (server uses Date.now().toString())
+        const taskId = taskItem.dataset.taskId;
+        if (!taskId) return;
 
         if (actionButton.classList.contains('edit-task-btn')) {
           handlers.edit && handlers.edit(taskId);
@@ -239,8 +240,9 @@ export class TaskList {
       // If not clicking on an action button, select the task (click on li)
       const taskItem = target.closest('li[data-task-id]');
       if (taskItem) {
-        const taskId = Number(taskItem.dataset.taskId);
-        if (Number.isNaN(taskId)) return;
+        // Keep taskId as string to match API format (server uses Date.now().toString())
+        const taskId = taskItem.dataset.taskId;
+        if (!taskId) return;
 
         // Select this task
         window.selectTask(taskId);

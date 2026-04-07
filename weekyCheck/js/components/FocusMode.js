@@ -19,6 +19,22 @@ export class FocusMode {
   }
 
   /**
+   * Set the task collection reference (for async updates)
+   * @param {Object} taskCollection - TaskCollection instance
+   */
+  setTaskCollection(taskCollection) {
+    this.taskCollection = taskCollection;
+  }
+
+  /**
+   * Set the task controller reference (for async updates)
+   * @param {Object} taskController - TaskController instance
+   */
+  setTaskController(taskController) {
+    this.taskController = taskController;
+  }
+
+  /**
    * Initialize DOM references
    */
   initDOMReferences() {

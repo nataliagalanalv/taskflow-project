@@ -1,91 +1,174 @@
 /**
- * TaskController - Controlador para gestionar las operaciones de tareas
+ * TaskController - Controlador para gestionar las operaciones de tareas con API
+ * Maneja operaciones asíncronas con la API externa
  */
 
-import { StorageService } from '../services/StorageService.js';
+import { taskAPI } from '../api/client.js';
 import { validateNewTask } from '../utils/validations.js';
 
 export class TaskController {
-  constructor(taskCollection, onTasksChange) {
+  constructor(taskCollection, onTasksChange, onError) {
     this.taskCollection = taskCollection;
     this.onTasksChange = onTasksChange;
+    this.onError = onError;
   }
 
   /**
-   * Add a new task
+   * Add a new task (async - creates in API first)
    * @param {Object} taskData - Task data (title, priority, type)
+   * @returns {Promise<boolean>} True if successful
    */
-  addTask(taskData) {
+  async addTask(taskData) {
     const validation = validateNewTask(taskData);
     if (!validation.ok) return false;
 
-    this.taskCollection.add({
-      id: Date.now(),
-      title: validation.value.title,
-      completed: false,
-      priority: validation.value.priority,
-      type: validation.value.type,
-    });
+    try {
+      // Create task in API first
+      const createdTask = await taskAPI.create({
+        title: validation.value.title,
+        completed: false,
+        priority: validation.value.priority,
+        type: validation.value.type,
+      });
 
-    this.saveAndNotify();
-    return true;
+      // Add to local collection with the ID from the server
+      this.taskCollection.add({
+        id: createdTask.id,
+        title: createdTask.title,
+        completed: createdTask.completed,
+        priority: createdTask.priority,
+        type: createdTask.type,
+        createdAt: createdTask.createdAt,
+      });
+
+      if (this.onTasksChange) this.onTasksChange();
+      return true;
+    } catch (error) {
+      console.error('TaskController: Error al crear tarea:', error);
+      if (this.onError) this.onError('Error al crear la tarea', error);
+      return false;
+    }
   }
 
   /**
-   * Delete a task by ID
-   * @param {number} id - Task ID
+   * Delete a task by ID (async - deletes from API first)
+   * @param {string} id - Task ID (string format from API)
    */
-  deleteTask(id) {
-    this.taskCollection.delete(id);
-    this.saveAndNotify();
+  async deleteTask(id) {
+    try {
+      // Delete from API first
+      await taskAPI.delete(id);
+      
+      // Remove from local collection
+      this.taskCollection.delete(id);
+      
+      if (this.onTasksChange) this.onTasksChange();
+    } catch (error) {
+      console.error('TaskController: Error al eliminar tarea:', error);
+      if (this.onError) this.onError('Error al eliminar la tarea', error);
+    }
   }
 
   /**
-   * Toggle task completion status
-   * @param {number} id - Task ID
+   * Toggle task completion status (async - updates in API first)
+   * @param {string} id - Task ID (string format from API)
    */
-  toggleTask(id) {
-    this.taskCollection.toggle(id);
-    this.saveAndNotify();
+  async toggleTask(id) {
+    const task = this.taskCollection.getAll().find(t => t.id === id);
+    if (!task) return;
+
+    try {
+      // Update in API first
+      await taskAPI.update(id, {
+        ...task.toJSON(),
+        completed: !task.completed,
+      });
+
+      // Update local collection
+      task.toggle();
+      
+      if (this.onTasksChange) this.onTasksChange();
+    } catch (error) {
+      console.error('TaskController: Error al actualizar tarea:', error);
+      if (this.onError) this.onError('Error al actualizar la tarea', error);
+    }
   }
 
   /**
-   * Edit a task title
-   * @param {number} id - Task ID
+   * Edit a task title (async - updates in API first)
+   * @param {string} id - Task ID (string format from API)
    * @param {string} newTitle - New title
    */
-  editTask(id) {
+  async editTask(id) {
     const task = this.taskCollection.getAll().find(t => t.id === id);
     if (!task) return;
 
     const newTitle = prompt('Editar tarea:', task.title);
     if (newTitle && newTitle.trim() !== '') {
-      task.updateTitle(newTitle.trim());
-      this.saveAndNotify();
+      try {
+        // Update in API first
+        await taskAPI.update(id, {
+          ...task.toJSON(),
+          title: newTitle.trim(),
+        });
+
+        // Update local collection
+        task.updateTitle(newTitle.trim());
+        
+        if (this.onTasksChange) this.onTasksChange();
+      } catch (error) {
+        console.error('TaskController: Error al editar tarea:', error);
+        if (this.onError) this.onError('Error al editar la tarea', error);
+      }
     }
   }
 
   /**
-   * Mark all tasks as completed
+   * Mark all tasks as completed (async - updates all in API)
    */
-  markAllCompleted() {
-    this.taskCollection.markAllCompleted();
-    this.saveAndNotify();
+  async markAllCompleted() {
+    try {
+      const tasks = this.taskCollection.getAll();
+      
+      // Update all tasks in API
+      for (const task of tasks) {
+        if (!task.completed) {
+          await taskAPI.update(task.id, {
+            ...task.toJSON(),
+            completed: true,
+          });
+        }
+      }
+
+      // Update local collection
+      this.taskCollection.markAllCompleted();
+      
+      if (this.onTasksChange) this.onTasksChange();
+    } catch (error) {
+      console.error('TaskController: Error al marcar todas como completadas:', error);
+      if (this.onError) this.onError('Error al marcar todas como completadas', error);
+    }
   }
 
   /**
-   * Delete all completed tasks
+   * Delete all completed tasks (async - deletes from API)
    */
-  deleteAllCompleted() {
-    this.taskCollection.deleteCompleted();
-    this.saveAndNotify();
-  }
+  async deleteAllCompleted() {
+    try {
+      const completedTasks = this.taskCollection.getAll().filter(t => t.completed);
+      
+      // Delete all completed tasks from API
+      for (const task of completedTasks) {
+        await taskAPI.delete(task.id);
+      }
 
-  /**
-   * Save tasks to storage and notify change
-   */
-  saveAndNotify() {
-    StorageService.saveTasks(this.taskCollection.toJSON());
-    if (this.onTasksChange) this.onTasksChange();
+      // Update local collection
+      this.taskCollection.deleteCompleted();
+      
+      if (this.onTasksChange) this.onTasksChange();
+    } catch (error) {
+      console.error('TaskController: Error al eliminar completadas:', error);
+      if (this.onError) this.onError('Error al eliminar tareas completadas', error);
+    }
   }
 }

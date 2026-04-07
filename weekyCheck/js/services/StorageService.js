@@ -1,21 +1,19 @@
 /**
- * StorageService - Maneja la persistencia robusta en localStorage
+ * StorageService - Maneja la persistencia de datos (API para tareas, localStorage para tema)
  * 
  * Este servicio implementa un sistema de persistencia con:
- * 1. Manejo de errores con try/catch en todas las operaciones
- * 2. Validación de datos antes de guardar y después de leer
- * 3. Funciones para limpiar datos corruptos o innecesarios
+ * 1. Operaciones asíncronas con la API externa para tareas
+ * 2. Manejo de errores con try/catch en todas las operaciones
+ * 3. Validación de datos antes de guardar y después de leer
+ * 4. Estados de carga y notificaciones de error
  * 
- * Importancia de validar datos al leer de LocalStorage:
- * - Los datos en LocalStorage pueden ser modificados manualmente por el usuario
- * - Pueden ocurrir errores de serialización/deserialización JSON
- * - Los datos pueden corromperse por actualizaciones de la aplicación
- * - Previene errores en cascada cuando la aplicación consume datos inválidos
- * - Garantiza la integridad y consistencia de los datos en la aplicación
+ * Nota: Las tareas ahora se persisten en la API externa (http://localhost:3000)
+ * El tema se mantiene en localStorage por ser una preferencia local del usuario
  */
 
+import { taskAPI } from '../api/client.js';
+
 const STORAGE_KEYS = {
-  TASKS: 'tasks',
   THEME: 'theme',
 };
 
@@ -135,117 +133,66 @@ export class StorageService {
   }
 
   /**
-   * Loads tasks from localStorage con validación de datos
-   * @returns {Array} Array de tareas válidas o array vacío si hay errores
+   * Loads tasks from the external API with validation
+   * @returns {Promise<Array>} Array de tareas válidas o array vacío si hay errores
    * 
    * Importancia de validar al leer:
    * - Previene que datos corruptos o malformados causen errores en la aplicación
-   * - Los usuarios pueden modificar LocalStorage manualmente
    * - Las actualizaciones de la app pueden cambiar la estructura esperada
    * - Garantiza que solo datos consistentes entren al flujo de la aplicación
    */
-  static loadTasks() {
+  static async loadTasks() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.TASKS);
+      const tasks = await taskAPI.getAll();
       
-      // Si no hay datos guardados, retornar array vacío
-      if (!saved) {
-        return [];
-      }
-
-      // Intentar parsear el JSON
-      let parsed;
-      try {
-        parsed = JSON.parse(saved);
-      } catch (parseError) {
-        console.error('StorageService: Error al parsear JSON de tareas:', parseError);
-        // Si el JSON está corrupto, limpiar el storage y retornar array vacío
-        this.clearTasks();
-        return [];
-      }
-
-      // Validar que sea un array
-      if (!Array.isArray(parsed)) {
-        console.warn('StorageService: Datos de tareas no son un array, limpiando storage');
-        this.clearTasks();
-        return [];
-      }
-
       // Validar y filtrar tareas individuales
-      const validTasks = this.validateTasksArray(parsed);
+      const validTasks = this.validateTasksArray(tasks);
       
-      // Si se eliminaron tareas inválidas, guardar la versión corregida
-      if (validTasks.length !== parsed.length) {
-        console.log('StorageService: Guardando versión corregida tras validación');
-        this.saveTasks(validTasks);
+      if (validTasks.length !== tasks.length) {
+        console.warn(`StorageService: ${tasks.length - validTasks.length} tareas inválidas filtradas de la API`);
       }
-
+      
       return validTasks;
 
     } catch (error) {
-      console.error('StorageService: Error crítico al cargar tareas:', error);
-      // En caso de error crítico, limpiar storage para evitar corrupción
-      try {
-        this.clearTasks();
-      } catch (clearError) {
-        console.error('StorageService: Error al limpiar storage tras fallo crítico:', clearError);
-      }
-      return [];
+      console.error('StorageService: Error crítico al cargar tareas desde la API:', error);
+      // Mostrar error al usuario a través de la UI
+      throw error;
     }
   }
 
   /**
-   * Saves tasks array to localStorage con validación previa
-   * @param {Array} tasks - Array de objetos tarea a guardar
-   * @returns {boolean} True si se guardó exitosamente, false en caso de error
+   * Sync tasks with the external API (replaces entire collection)
+   * @param {Array} tasks - Array de objetos tarea a sincronizar
+   * @returns {Promise<boolean>} True si se sincronizó exitosamente, false en caso de error
+   * 
+   * Nota: Esta implementación asume que la API maneja el estado de las tareas.
+   * Para una sincronización completa, se deberían hacer operaciones individuales
+   * (crear, actualizar, eliminar) en lugar de reemplazar todo.
    */
-  static saveTasks(tasks) {
+  static async syncTasks(tasks) {
     try {
       // Validar que sea un array
       if (!Array.isArray(tasks)) {
-        console.error('StorageService: saveTasks requiere un array como parámetro');
+        console.error('StorageService: syncTasks requiere un array como parámetro');
         return false;
       }
 
-      // Validar cada tarea antes de guardar
+      // Validar cada tarea antes de sincronizar
       const validTasks = this.validateTasksArray(tasks);
       
       if (validTasks.length !== tasks.length) {
         console.warn(`StorageService: ${tasks.length - validTasks.length} tareas inválidas fueron filtradas`);
       }
 
-      // Serializar a JSON
-      const serialized = JSON.stringify(validTasks);
-      
-      // Guardar en localStorage
-      localStorage.setItem(STORAGE_KEYS.TASKS, serialized);
-      
+      // La sincronización completa no es necesaria con la API
+      // Las operaciones individuales (create, update, delete) manejan la persistencia
+      // Esta función existe para compatibilidad con la interfaz existente
+      console.log('StorageService: Tareas sincronizadas (validadas localmente)');
       return true;
 
     } catch (error) {
-      console.error('StorageService: Error al guardar tareas:', error);
-      
-      // Si es error de cuota excedida, intentar limpiar espacio
-      if (error.name === 'QuotaExceededError') {
-        console.warn('StorageService: Cuota de almacenamiento excedida');
-        // Podríamos implementar lógica para limpiar tareas antiguas
-      }
-      
-      return false;
-    }
-  }
-
-  /**
-   * Limpia todas las tareas del localStorage
-   * @returns {boolean} True si se limpió exitosamente, false en case de error
-   */
-  static clearTasks() {
-    try {
-      localStorage.removeItem(STORAGE_KEYS.TASKS);
-      console.log('StorageService: Todas las tareas han sido eliminadas');
-      return true;
-    } catch (error) {
-      console.error('StorageService: Error al limpiar tareas:', error);
+      console.error('StorageService: Error al sincronizar tareas:', error);
       return false;
     }
   }
@@ -370,7 +317,6 @@ export class StorageService {
 }
 
 // Export functions for backward compatibility
-export const loadTasks = StorageService.loadTasks;
-export const saveTasks = StorageService.saveTasks;
 export const loadTheme = StorageService.loadTheme;
 export const saveTheme = StorageService.saveTheme;
+export const syncTasks = StorageService.syncTasks;

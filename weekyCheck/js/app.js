@@ -1,6 +1,7 @@
 /**
  * WeekyCheck - Main Application Entry Point
  * Aplicación de gestión de tareas con separación de responsabilidades
+ * Migrado a API externa con manejo de estados de red
  */
 
 // Models
@@ -19,6 +20,9 @@ import { FocusMode } from './components/FocusMode.js';
 
 // Controllers
 import { TaskController } from './controllers/TaskController.js';
+
+// API
+import { taskAPI } from './api/client.js';
 
 // Utils
 import { validateNewTask } from './utils/validations.js';
@@ -68,7 +72,7 @@ window.showSelectTaskAlert = function() {
 /**
  * Seleccionar una tarea por su ID
  * Si ya está seleccionada, la deselecciona
- * @param {number} taskId - ID de la tarea a seleccionar
+ * @param {string} taskId - ID de la tarea a seleccionar (string format from API)
  */
 window.selectTask = function(taskId) {
   // Si ya está seleccionada esta tarea, deseleccionarla
@@ -288,14 +292,19 @@ class WeekyCheckApp {
     // Initialize services
     this.themeService = new ThemeService();
     
-    // Initialize model with loaded tasks
-    const savedTasks = StorageService.loadTasks();
-    this.taskCollection = new TaskCollection(savedTasks);
+    // Initialize empty collection (will be populated async)
+    this.taskCollection = new TaskCollection([]);
     
-    // Initialize controller
+    // Loading and error state
+    this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
+    
+    // Initialize controller with error handler
     this.taskController = new TaskController(
       this.taskCollection,
-      () => this.render()
+      () => this.render(),
+      (message, error) => this.showError(message, error)
     );
     
     // Initialize components (without DOM refs yet)
@@ -318,6 +327,93 @@ class WeekyCheckApp {
     this.btnMarkAllCompleted = document.getElementById('mark-all-completed');
     this.btnDeleteAllCompleted = document.getElementById('delete-all-completed');
     this.btnExportBackup = document.getElementById('export-backup');
+    
+    // Setup API callbacks
+    this.setupAPICallbacks();
+  }
+
+  /**
+   * Setup API loading and error callbacks
+   */
+  setupAPICallbacks() {
+    taskAPI.onLoadingChange = (loading) => {
+      this.isLoading = loading;
+      this.updateLoadingUI();
+    };
+    
+    taskAPI.onError = (message, error) => {
+      this.showError(message, error);
+    };
+  }
+
+  /**
+   * Show error message to user
+   */
+  showError(message, error) {
+    this.hasError = true;
+    this.errorMessage = message;
+    this.updateErrorUI();
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      this.hideError();
+    }, 5000);
+  }
+
+  /**
+   * Hide error message
+   */
+  hideError() {
+    this.hasError = false;
+    this.errorMessage = '';
+    this.updateErrorUI();
+  }
+
+  /**
+   * Update loading UI elements
+   */
+  updateLoadingUI() {
+    const taskListContainer = document.getElementById('task-list');
+    if (!taskListContainer) return;
+
+    if (this.isLoading) {
+      // Show loading spinner
+      taskListContainer.innerHTML = `
+        <li class="flex items-center justify-center p-12">
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+            <p class="text-slate-500 dark:text-slate-400 font-semibold">Cargando tareas...</p>
+          </div>
+        </li>
+      `;
+    }
+  }
+
+  /**
+   * Update error UI elements
+   */
+  updateErrorUI() {
+    // Remove existing error banner
+    const existingBanner = document.getElementById('api-error-banner');
+    if (existingBanner) {
+      existingBanner.remove();
+    }
+
+    if (this.hasError) {
+      // Create error banner
+      const banner = document.createElement('div');
+      banner.id = 'api-error-banner';
+      banner.className = 'fixed top-4 right-4 z-[200] bg-red-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3';
+      banner.innerHTML = `
+        <span class="text-xl">⚠️</span>
+        <div>
+          <p class="font-bold">Error de conexión</p>
+          <p class="text-sm opacity-90">${this.errorMessage}</p>
+        </div>
+        <button onclick="document.getElementById('api-error-banner').remove()" class="ml-4 text-white hover:text-red-200 text-xl">✕</button>
+      `;
+      document.body.appendChild(banner);
+    }
   }
 
   /**
@@ -329,9 +425,9 @@ class WeekyCheckApp {
   }
 
   /**
-   * Initialize the application
+   * Initialize the application (async)
    */
-  init() {
+  async init() {
     // Initialize theme
     this.themeService.init();
     
@@ -350,6 +446,33 @@ class WeekyCheckApp {
     // Initialize task list
     this.taskList.init();
     
+    // Load tasks from API
+    try {
+      const tasks = await StorageService.loadTasks();
+      this.taskCollection = new TaskCollection(tasks);
+      
+      // Reinitialize controller with the new collection
+      this.taskController = new TaskController(
+        this.taskCollection,
+        () => this.render(),
+        (message, error) => this.showError(message, error)
+      );
+      
+      // Update focus mode reference
+      this.focusMode.setTaskCollection(this.taskCollection);
+      this.focusMode.setTaskController(this.taskController);
+      
+      // Update task list reference
+      this.taskList.taskCollection = this.taskCollection;
+      
+      this.hasError = false;
+      this.errorMessage = '';
+    } catch (error) {
+      console.error('WeekyCheckApp: Error loading tasks:', error);
+      this.showError('No se pudo conectar con el servidor', error.message);
+      this.hasError = true;
+    }
+    
     // Bind events
     this.bindEvents();
     
@@ -364,23 +487,29 @@ class WeekyCheckApp {
     // Theme toggle
     this.themeService.bindToggleEvent(() => this.render());
     
-    // Task list actions
+    // Task list actions (now async)
     this.taskList.bindActions({
-      edit: (id) => this.taskController.editTask(id),
-      delete: (id) => this.taskController.deleteTask(id),
-      toggle: (id) => this.taskController.toggleTask(id),
+      edit: async (id) => {
+        await this.taskController.editTask(id);
+      },
+      delete: async (id) => {
+        await this.taskController.deleteTask(id);
+      },
+      toggle: async (id) => {
+        await this.taskController.toggleTask(id);
+      },
     });
     
     // New task form
     this.newTaskForm?.addEventListener('submit', (e) => this.handleNewTask(e));
     
-    // Bulk actions
-    this.btnMarkAllCompleted?.addEventListener('click', () => {
-      this.taskController.markAllCompleted();
+    // Bulk actions (now async)
+    this.btnMarkAllCompleted?.addEventListener('click', async () => {
+      await this.taskController.markAllCompleted();
     });
     
-    this.btnDeleteAllCompleted?.addEventListener('click', () => {
-      this.taskController.deleteAllCompleted();
+    this.btnDeleteAllCompleted?.addEventListener('click', async () => {
+      await this.taskController.deleteAllCompleted();
     });
     
     // Export backup
@@ -402,20 +531,20 @@ class WeekyCheckApp {
    * Handle new task form submission
    * @param {Event} e - Submit event
    */
-  handleNewTask(e) {
+  async handleNewTask(e) {
     e.preventDefault();
     
     const title = this.taskInput?.value;
     const priority = this.prioritySelect?.value;
     const type = this.typeSelect?.value;
     
-    const success = this.taskController.addTask({ title, priority, type });
+    const success = await this.taskController.addTask({ title, priority, type });
     
     if (success) {
       // Clear form
       if (this.taskInput) this.taskInput.value = '';
-      this.render();
     }
+    // No need to call render() - controller already triggers it
   }
 
   /**
