@@ -1,4 +1,4 @@
-// Base de datos simulada en memoria
+
 let tasks = [];
 
 const obtenerTodas = () => {
@@ -7,7 +7,7 @@ const obtenerTodas = () => {
 
 const crearTarea = (data) => {
     const nuevaTarea = {
-        id: Date.now().toString(), // Generamos un ID único
+        id: Date.now().toString(), 
         ...data,
         completed: false,
         createdAt: new Date()
@@ -25,8 +25,29 @@ const eliminarTarea = (id) => {
     return true;
 };
 
+const actualizarTarea = (id, data) => {
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) {
+        throw new Error('NOT_FOUND');
+    }
+    tasks[index] = { ...tasks[index], ...data };
+    return tasks[index];
+};
+
+const completarTarea = (id) => {
+    const tarea = tasks.find(t => t.id === id);
+    if (!tarea) {
+        throw new Error('NOT_FOUND');
+    }
+    tarea.completed = true;
+    return tarea;
+};
+
+
 module.exports = {
     obtenerTodas,
     crearTarea,
+    actualizarTarea,
+    completarTarea,
     eliminarTarea
 };
