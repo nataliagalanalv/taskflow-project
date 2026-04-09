@@ -7,10 +7,17 @@ import { taskAPI } from '../api/client.js';
 import { validateNewTask } from '../utils/validations.js';
 
 export class TaskController {
-  constructor(taskCollection, onTasksChange, onError) {
+  constructor(taskCollection, onTasksChange, onError, onLoadingChange) {
     this.taskCollection = taskCollection;
     this.onTasksChange = onTasksChange;
     this.onError = onError;
+    this.onLoadingChange = onLoadingChange;
+    this.isLoading = false;
+  }
+
+  setLoading(state) {
+    this.isLoading = state;
+    if (this.onLoadingChange) this.onLoadingChange(state);
   }
 
   /**
@@ -21,6 +28,8 @@ export class TaskController {
   async addTask(taskData) {
     const validation = validateNewTask(taskData);
     if (!validation.ok) return false;
+
+    this.setLoading(true);
 
     try {
       // Create task in API first
@@ -44,9 +53,15 @@ export class TaskController {
       if (this.onTasksChange) this.onTasksChange();
       return true;
     } catch (error) {
-      console.error('TaskController: Error al crear tarea:', error);
-      if (this.onError) this.onError('Error al crear la tarea', error);
+
+      const errorMsg = error.message.includes('400') 
+        ? 'El servidor indica que los datos son inválidos' 
+        : 'Error de conexión con el servidor';
+
+      if (this.onError) this.onError(errorMsg, error);
       return false;
+    } finally {
+      this.setLoading(false);
     }
   }
 
@@ -55,6 +70,7 @@ export class TaskController {
    * @param {string} id - Task ID (string format from API)
    */
   async deleteTask(id) {
+    this.setLoading(true);
     try {
       // Delete from API first
       await taskAPI.delete(id);
@@ -66,6 +82,8 @@ export class TaskController {
     } catch (error) {
       console.error('TaskController: Error al eliminar tarea:', error);
       if (this.onError) this.onError('Error al eliminar la tarea', error);
+    } finally {
+      this.setLoading(false);
     }
   }
 
@@ -74,6 +92,8 @@ export class TaskController {
    * @param {string} id - Task ID (string format from API)
    */
   async toggleTask(id) {
+
+    this.setLoading(true);
     const task = this.taskCollection.getAll().find(t => t.id === id);
     if (!task) return;
 
@@ -91,6 +111,8 @@ export class TaskController {
     } catch (error) {
       console.error('TaskController: Error al actualizar tarea:', error);
       if (this.onError) this.onError('Error al actualizar la tarea', error);
+    } finally {
+      this.setLoading(false);
     }
   }
 
@@ -100,6 +122,8 @@ export class TaskController {
    * @param {string} newTitle - New title
    */
   async editTask(id) {
+
+    this.setLoading(true);
     const task = this.taskCollection.getAll().find(t => t.id === id);
     if (!task) return;
 
@@ -119,7 +143,10 @@ export class TaskController {
       } catch (error) {
         console.error('TaskController: Error al editar tarea:', error);
         if (this.onError) this.onError('Error al editar la tarea', error);
+      } finally {
+        this.setLoading(false);
       }
+
     }
   }
 
@@ -127,6 +154,8 @@ export class TaskController {
    * Mark all tasks as completed (async - updates all in API)
    */
   async markAllCompleted() {
+
+    this.setLoading(true);
     try {
       const tasks = this.taskCollection.getAll();
       
@@ -147,6 +176,8 @@ export class TaskController {
     } catch (error) {
       console.error('TaskController: Error al marcar todas como completadas:', error);
       if (this.onError) this.onError('Error al marcar todas como completadas', error);
+    } finally {
+      this.setLoading(false);
     }
   }
 
@@ -154,6 +185,7 @@ export class TaskController {
    * Delete all completed tasks (async - deletes from API)
    */
   async deleteAllCompleted() {
+    this.setLoading(true);
     try {
       const completedTasks = this.taskCollection.getAll().filter(t => t.completed);
       
@@ -169,6 +201,8 @@ export class TaskController {
     } catch (error) {
       console.error('TaskController: Error al eliminar completadas:', error);
       if (this.onError) this.onError('Error al eliminar tareas completadas', error);
+    } finally {
+      this.setLoading(false);
     }
   }
 }

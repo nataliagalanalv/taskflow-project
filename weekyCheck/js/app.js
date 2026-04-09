@@ -304,7 +304,8 @@ class WeekyCheckApp {
     this.taskController = new TaskController(
       this.taskCollection,
       () => this.render(),
-      (message, error) => this.showError(message, error)
+      (message, error) => this.showError(message, error),
+      (loading) => this.handleLoadingChange(loading)
     );
     
     // Initialize components (without DOM refs yet)
@@ -389,6 +390,27 @@ class WeekyCheckApp {
     }
   }
 
+    /**
+ * Gestiona el estado visual de carga de toda la aplicación
+ * @param {boolean} isLoading - Si la app está realizando una operación de red
+ */
+  handleLoadingChange(isLoading) {
+    this.isLoading = isLoading;
+    
+    // Gestionar el cursor del ratón
+    document.body.style.cursor = isLoading ? 'wait' : 'default';
+
+    // Gestionar el spinner de la lista
+    this.updateLoadingUI();
+
+    // Bloquear el botón de envío para evitar duplicados
+    const submitBtn = this.newTaskForm?.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = isLoading;
+        submitBtn.opacity = isLoading ? '0.5' : '1';
+    }
+  }
+
   /**
    * Update error UI elements
    */
@@ -455,9 +477,10 @@ class WeekyCheckApp {
       this.taskController = new TaskController(
         this.taskCollection,
         () => this.render(),
-        (message, error) => this.showError(message, error)
+        (message, error) => this.showError(message, error),
+        (loading) => this.handleLoadingChange(loading) // <--- AÑADE ESTA LÍNEA AQUÍ
       );
-      
+
       // Update focus mode reference
       this.focusMode.setTaskCollection(this.taskCollection);
       this.focusMode.setTaskController(this.taskController);
