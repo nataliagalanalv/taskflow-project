@@ -1,6 +1,3 @@
-/**
- * Constants - Todas las constantes de la aplicación
- */
 
 export const PRIORITY_CLASS_BY_VALUE = {
   alta: 'badge-priority text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/20',
