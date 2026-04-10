@@ -1,11 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server/index.js", "use": "@vercel/node" },
+    { "src": "server/src/index.js", "use": "@vercel/node" },
     { "src": "weekyCheck/**", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "server/index.js" },
+    { "source": "/api/(.*)", "destination": "server/src/index.js" },
     { "source": "/(.*)", "destination": "weekyCheck/$1" }
   ]
 }
