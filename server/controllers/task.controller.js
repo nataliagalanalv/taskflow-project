@@ -1,4 +1,4 @@
-const taskService = require('../services/task.service');
+const taskService = require('./services/task.service');
 
 const getTasks = (req, res) => {
     const tasks = taskService.obtenerTodas();
