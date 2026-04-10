@@ -5,7 +5,17 @@
     { "src": "weekyCheck/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "server/src/index.js" },
-    { "src": "/(.*)", "dest": "weekyCheck/$1" }
+    {
+      "src": "/api/v1/tasks(.*)",
+      "dest": "server/src/index.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "server/src/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "weekyCheck/$1"
+    }
   ]
 }
