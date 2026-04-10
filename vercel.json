@@ -2,7 +2,7 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/v1/tasks(.*)",
       "destination": "/server/index.js"
     }
   ]
