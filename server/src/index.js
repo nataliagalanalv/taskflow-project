@@ -53,5 +53,4 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-// ESTA LÍNEA ES LA QUE VERCEL BUSCA PARA HACER FUNCIONAR TU API
 module.exports = app;
