@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api/v1/tasks';
+const API_URL = '/api/v1/tasks';
 
 /**
  * TaskAPI - Cliente para la API REST de tareas
