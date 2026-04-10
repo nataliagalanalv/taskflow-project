@@ -15,10 +15,6 @@
     {
       "source": "/api/(.*)",
       "destination": "/server/index.js"
-    },
-    {
-      "source": "/((?!api|js|css|assets).* )",
-      "destination": "/index.html"
     }
   ]
 }
