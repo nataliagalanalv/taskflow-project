@@ -133,31 +133,31 @@ taskflow-project/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                           FRONTEND                                   │
+│                           FRONTEND                                  │
 │  ┌─────────────────────────────────────────────────────────────────┐│
 │  │                    WeekyCheckApp (app.js)                       ││
-│  │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ ││
-│  │  │ TaskController  │───▶│   taskAPI       │───▶│   fetch     │ ││
-│  │  │   (lógica)      │    │  (cliente HTTP) │    │  (HTTP)     │ ││
-│  │  └─────────────────┘    └─────────────────┘    └─────────────┘ ││
+│  │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐  ││
+│  │  │ TaskController  │───▶│   taskAPI       │───▶│   fetch    │  ││
+│  │  │   (lógica)      │    │  (cliente HTTP) │    │  (HTTP)     │  ││
+│  │  └─────────────────┘    └─────────────────┘    └─────────────┘  ││
 │  └─────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼ HTTP (JSON)
 ┌─────────────────────────────────────────────────────────────────────┐
-│                           BACKEND                                    │
+│                           BACKEND                                   │
 │  ┌─────────────────────────────────────────────────────────────────┐│
 │  │                    Express Server (index.js)                    ││
-│  │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐ ││
-│  │  │   CORS          │───▶│   Router        │───▶│ Controller  │ ││
-│  │  │  (middleware)   │    │  (task.routes)  │    │  (lógica)   │ ││
-│  │  └─────────────────┘    └─────────────────┘    └─────────────┘ ││
+│  │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────   ││
+│  │  │   CORS          │───▶│   Router        │───▶│ Controller │  ││
+│  │  │  (middleware)   │    │  (task.routes)  │    │  (lógica)   │  ││
+│  │  └─────────────────┘    └─────────────────┘    └─────────────┘  ││
 │  │                                                      │          ││
 │  │                                                      ▼          ││
-│  │                                               ┌─────────────┐  ││
-│  │                                               │  Service    │  ││
+│  │                                               ┌─────────────┐   ││
+│  │                                               │  Service    │   ││
 │  │                                               │ (task.service)│ ││
-│  │                                               └─────────────┘  ││
+│  │                                               └─────────────┘   ││
 │  └─────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -180,17 +180,9 @@ export const taskAPI = {
     async update()    { ... }  // PUT /api/v1/tasks/:id
     async delete()    { ... }  // DELETE /api/v1/tasks/:id
 };
+
 ```
-
-**Características clave:**
-- 🔄 **Patrón Observer**: Callbacks `onLoadingChange` y `onError` para notificar cambios de estado
-- ⚡ **Async/Await**: Todas las operaciones son asíncronas y no bloqueantes
-- 🛡️ **Manejo de errores**: Try/catch en cada operación con notificación al UI
-- 📊 **Estado de carga**: `setLoading()` notifica cuando una operación inicia/finaliza
-
----
-
-## 🖥️ Backend - Explicación Técnica
+## Backend - Explicación Técnica
 
 ### 1. Middlewares
 
@@ -222,13 +214,6 @@ app.use((err, req, res, next) => {
 });
 ```
 
-| Middleware | Función | Propósito |
-|------------|---------|-----------|
-| `cors()` | Habilita CORS | Permite peticiones desde `localhost` (frontend) |
-| `express.json()` | Parsea JSON | Convierte `req.body` de JSON a objeto JS |
-| `express.static()` | Sirve estáticos | Permite servir el frontend desde el backend |
-| Error Handler | Maneja errores | Respuestas de error consistentes y semánticas |
-
 ### 2. Sistema de Rutas (Router)
 
 El Router desacopla la definición de URLs de la lógica de negocio:
@@ -245,12 +230,6 @@ router.delete('/:id', taskController.deleteTask);
 
 module.exports = router;
 ```
-
-**Ventajas del Router:**
-- 🎯 **Separation of Concerns**: Las rutas solo definen URLs, no lógica
-- 📦 **Modularidad**: Cada recurso puede tener su propio router
-- 🔄 **Reutilización**: Los controladores pueden usarse en múltiples rutas
-- 🧪 **Testeabilidad**: Fácil de testear rutas individualmente
 
 ### 3. Controladores (Controllers)
 
@@ -292,7 +271,7 @@ const crearTarea = (data) => {
 
 ---
 
-## 📡 API REST
+## API REST
 
 ### Endpoints Disponibles
 
@@ -376,31 +355,11 @@ const crearTarea = (data) => {
 
 ---
 
-## 🎨 Gestión de Estados de UI
+## Gestión de Estados de UI
 
 ### Arquitectura de Estados
 
 La aplicación gestiona tres estados principales de la interfaz:
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         GESTIÓN DE ESTADOS                           │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐           │
-│  │   LOADING    │───▶│   SUCCESS    │───▶│    ERROR     │           │
-│  │   (Cargando) │    │   (Éxito)    │    │   (Fallo)    │           │
-│  └──────────────┘    └──────────────┘    └──────────────┘           │
-│         │                   │                   │                    │
-│         ▼                   ▼                   ▼                    │
-│   Spinner animado     Actualización UI    Banner rojo               │
-│   Cursor: wait        Datos actualizados   Auto-hide 5s             │
-│   Botón disabled                              │                      │
-│                                               ▼                      │
-│                                        Reintentar operación          │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
 
 ### 1. Estado LOADING (Cargando)
 
@@ -415,12 +374,6 @@ setLoading(loading) {
     }
 }
 ```
-
-**Manifestación visual en UI:**
-- 🔄 **Spinner animado** en la lista de tareas
-- 🖱️ **Cursor en modo espera** (`cursor: wait`)
-- 🚫 **Botón de envío deshabilitado** (evita duplicados)
-
 ```javascript
 // app.js - updateLoadingUI()
 if (this.isLoading) {
@@ -440,9 +393,9 @@ if (this.isLoading) {
 
 Cuando una operación se completa correctamente:
 
-- ✅ **Actualización inmediata del DOM** - Los datos se reflejan al instante
-- 📊 **Recálculo de estadísticas** - El panel de progreso se actualiza
-- 🎯 **Feedback implícito** - El usuario ve el resultado de su acción
+- **Actualización inmediata del DOM** - Los datos se reflejan al instante
+- **Recálculo de estadísticas** - El panel de progreso se actualiza
+- **Feedback implícito** - El usuario ve el resultado de su acción
 
 ```javascript
 // TaskController.js - addTask()
@@ -455,10 +408,10 @@ if (this.onTasksChange) this.onTasksChange();  // Re-renderiza UI
 
 Cuando una operación falla (ej: servidor caído, datos inválidos):
 
-- ⚠️ **Banner rojo en la parte superior** - Notificación visual clara
-- 📝 **Mensaje descriptivo** - Explica qué salió mal
-- ⏱️ **Auto-ocultable** - Desaparece después de 5 segundos
-- 🔄 **Posibilidad de reintentar** - El usuario puede volver a intentar
+- **Banner rojo en la parte superior** - Notificación visual clara
+- **Mensaje descriptivo** - Explica qué salió mal
+- **Auto-ocultable** - Desaparece después de 5 segundos
+- **Posibilidad de reintentar** - El usuario puede volver a intentar
 
 ```javascript
 // app.js - showError()
@@ -527,7 +480,7 @@ async addTask(taskData) {
 
 ---
 
-## 💻 Ejemplos Prácticos
+## Ejemplos Prácticos
 
 ### Ejemplo 1: Petición GET (Obtener todas las tareas)
 
@@ -656,7 +609,7 @@ setupAPICallbacks() {
 
 ---
 
-## 🛠️ Instalación y Ejecución
+## Instalación y Ejecución
 
 ### Prerrequisitos
 
@@ -713,15 +666,9 @@ http://localhost:3000
 npx serve .
 ```
 
-### Verificación
-
-1. ✅ El backend responde en `http://localhost:3000/api/v1/tasks`
-2. ✅ El frontend carga en `http://localhost:3000`
-3. ✅ Las tareas se pueden crear, editar y eliminar
-
 ---
 
-## 🧰 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Frontend
 
@@ -745,7 +692,7 @@ npx serve .
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la licencia MIT.
 

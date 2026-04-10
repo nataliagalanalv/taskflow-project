@@ -46,7 +46,12 @@ app.use((err, req, res, next) => {
 });
 
 
-// Arrancar el servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}`);
-});
+// Solo arrancamos el puerto si NO estamos en Vercel (entorno local)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor local corriendo en: http://localhost:${PORT}`);
+    });
+}
+
+// ESTA LÍNEA ES LA QUE VERCEL BUSCA PARA HACER FUNCIONAR TU API
+module.exports = app;
