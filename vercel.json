@@ -4,6 +4,10 @@
     {
       "source": "/api/v1/tasks(.*)",
       "destination": "/server/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/weekyCheck/$1"
     }
   ]
 }
