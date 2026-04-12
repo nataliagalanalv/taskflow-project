@@ -4,7 +4,7 @@ const Task = require('../models/task.model');
 
 const obtenerTodas = async () => {
     await connectDB();
-    return (await Task.find()).toSorted({ createdAt: -1 });
+    return await Task.find().sort({ createdAt: -1 });
 };
 
 const crearTarea = async (data) => {
