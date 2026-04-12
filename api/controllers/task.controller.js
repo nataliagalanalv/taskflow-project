@@ -36,9 +36,19 @@ const updateTask = (req, res, next) => {
     }
 };
 
+const completeTask = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const tareaCompletada = await taskService.completarTarea(id);
+        res.json(tareaCompletada);
+    } catch (error) { next(error); }
+};
+
 module.exports = {
     getTasks,
     createTask,
     deleteTask,
-    updateTask
+    updateTask,
+    completeTask
 };
+  
