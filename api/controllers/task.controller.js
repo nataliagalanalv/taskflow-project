@@ -1,7 +1,9 @@
 const taskService = require('../services/task.service');
 
-const getTasks = (req, res) => {
-    const tasks = taskService.obtenerTodas();
+const getTasks = async (req, res) => {
+    const tasks = await taskService.obtenerTodas();
+    console.log('TASKS:', JSON.stringify(tasks));
+    console.log('TYPE:', typeof tasks, Array.isArray(tasks));
     res.json(tasks);
 };
 
