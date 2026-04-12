@@ -1,53 +1,36 @@
 
-let tasks = [];
+const connectDB = require('../db');
+const Task = require('../models/task.model');
 
-const obtenerTodas = () => {
-    return tasks;
+const obtenerTodas = async () => {
+    await connectDB();
+    return (await Task.find()).toSorted({ createdAt: -1 });
 };
 
-const crearTarea = (data) => {
-    const nuevaTarea = {
-        id: Date.now().toString(), 
-        ...data,
-        completed: false,
-        createdAt: new Date()
-    };
-    tasks.push(nuevaTarea);
-    return nuevaTarea;
+const crearTarea = async (data) => {
+    await connectDB();
+    const tarea = new Task(data);
+    return await tarea.save();
 };
 
-const eliminarTarea = (id) => {
-    const existe = tasks.find(t => t.id === id);
-    if (!existe) {
-        throw new Error('NOT_FOUND');
-    }
-    tasks = tasks.filter(t => t.id !== id);
+const eliminarTarea = async (id) => {
+    await connectDB();
+    const resultado = await Task.findByIdAndDelete(id);
+    if (!resultado) throw new Error('NOT_FOUND');
     return true;
 };
 
-const actualizarTarea = (id, data) => {
-    const index = tasks.findIndex(t => t.id === id);
-    if (index === -1) {
-        throw new Error('NOT_FOUND');
-    }
-    tasks[index] = { ...tasks[index], ...data };
-    return tasks[index];
-};
-
-const completarTarea = (id) => {
-    const tarea = tasks.find(t => t.id === id);
-    if (!tarea) {
-        throw new Error('NOT_FOUND');
-    }
-    tarea.completed = true;
+const actualizarTarea = async (id, data) => {
+    await connectDB();
+    const tarea = await Task.findByIdAndUpdate(id, data, { new: true });
+    if (!tarea) throw new Error('NOT_FOUND');
     return tarea;
 };
 
-
-module.exports = {
-    obtenerTodas,
-    crearTarea,
-    actualizarTarea,
-    completarTarea,
-    eliminarTarea
+const completarTarea = async (id) => {
+    return actualizarTarea(id, { completed: true });
 };
+
+module.exports = { obtenerTodas, crearTarea, actualizarTarea, completarTarea, eliminarTarea };
+
+   
