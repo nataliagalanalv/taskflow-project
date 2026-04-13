@@ -5,6 +5,7 @@
 
 import { taskAPI } from '../api/client.js';
 import { validateNewTask } from '../utils/validations.js';
+import { Task } from '../models/Task.js';
 
 export class TaskController {
   constructor(taskCollection, onTasksChange, onError, onLoadingChange) {
@@ -32,33 +33,20 @@ export class TaskController {
     this.setLoading(true);
 
     try {
-      // Create task in API first
-      const createdTask = await taskAPI.create({
+      await taskAPI.create({
         title: validation.value.title,
         completed: false,
         priority: validation.value.priority,
         type: validation.value.type,
       });
 
-      // Add to local collection with the ID from the server
-      this.taskCollection.add({
-        id: createdTask.id,
-        title: createdTask.title,
-        completed: createdTask.completed,
-        priority: createdTask.priority,
-        type: createdTask.type,
-        createdAt: createdTask.createdAt,
-      });
+      const freshTasks = await taskAPI.getAll();
+      this.taskCollection.tasks = freshTasks.map(t => new Task(t));
 
       if (this.onTasksChange) this.onTasksChange();
       return true;
     } catch (error) {
-
-      const errorMsg = error.message.includes('400') 
-        ? 'El servidor indica que los datos son inválidos' 
-        : 'Error de conexión con el servidor';
-
-      if (this.onError) this.onError(errorMsg, error);
+      if (this.onError) this.onError('Error al crear la tarea', error);
       return false;
     } finally {
       this.setLoading(false);
