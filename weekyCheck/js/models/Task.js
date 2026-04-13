@@ -2,12 +2,13 @@
  * Task Model - Define la estructura y comportamiento de una tarea
  */
 export class Task {
-  constructor({ id, title, completed = false, priority = 'media', type = 'personal' }) {
+  constructor({ id, title, completed = false, priority = 'media', type = 'personal', createdAt = null }) {
     this.id = id;
     this.title = title;
     this.completed = completed;
     this.priority = priority;
     this.type = type;
+    this.createdAt = createdAt;
   }
 
   toggle() {

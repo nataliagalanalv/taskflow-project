@@ -128,18 +128,15 @@ export class TaskController {
     if (!task) return;
 
     const newTitle = prompt('Editar tarea:', task.title);
-    if (newTitle && newTitle.trim() !== '') {
-      try {
-        // Update in API first
+    try{
+      if (newTitle && newTitle.trim() !== '') 
         await taskAPI.update(id, {
           ...task.toJSON(),
           title: newTitle.trim(),
         });
-
-        // Update local collection
         task.updateTitle(newTitle.trim());
-        
         if (this.onTasksChange) this.onTasksChange();
+
       } catch (error) {
         console.error('TaskController: Error al editar tarea:', error);
         if (this.onError) this.onError('Error al editar la tarea', error);
@@ -148,7 +145,6 @@ export class TaskController {
       }
 
     }
-  }
 
   /**
    * Mark all tasks as completed (async - updates all in API)
